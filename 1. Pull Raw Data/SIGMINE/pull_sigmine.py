@@ -53,8 +53,8 @@ DATA_DIR = Path(config.PROJECT_ROOT) / "Data" / "SIGMINE"
 # line to this list.
 BASE_URL = "https://dadosabertos.anm.gov.br/SIGMINE/PROCESSOS_MINERARIOS/"
 FILES_TO_PULL = [
-    ("active", "BRASIL.zip"),
-    ("inactive", "PROCESSOS_INATIVOS.zip"),
+    ("Active", "BRASIL.zip"),
+    ("Inactive", "PROCESSOS_INATIVOS.zip"),
 ]
 
 

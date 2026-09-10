@@ -1,0 +1,30 @@
+# Personal config - everyone has their own local paths in here.
+# config_template.py (the version with no real path in it) stays tracked.
+config.py
+
+# OS junk
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor/IDE
+.vscode/
+.idea/
+
+# Stata
+*.log
+*.smcl
+*.dtaold
+
+# Python
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.venv/
+venv/
+
+# Archives / raw bulk downloads (shouldn't live in Code/ at all, but just in case)
+*.zip
+*.7z
+*.rar
+*.gz

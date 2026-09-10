@@ -12,7 +12,7 @@
 *   Data/SIGMINE/Inactive/PROCESSOS_INATIVOS.shp (+ .dbf, .shx, etc.)
 *
 * Output:
-*   Data/SIGMINE/Clean/sigmine_mines.dta
+*   Working/SIGMINE/sigmine_mine_level.dta
 *
 * Requires Stata's built-in spatial tools (spshape2dta), which need a
 * reasonably modern Stata (15 or later).
@@ -26,7 +26,8 @@
 *
 *		Section 1: Import raw data & rename variables of interest
 *		Section 2: Translate variables into english
-* 		Seciton 3: Clean-up files and save
+*		Section 3: Collapse to one row per mining process
+* 		Section 4: Clean-up files and save
 *
 * ==========================================================================
 
@@ -39,11 +40,10 @@ if "$PROJECT_ROOT" == "" {
     exit 198
 }
 
-global RAW_DIR   "$PROJECT_ROOT/Data/SIGMINE"
-global CLEAN_DIR "$PROJECT_ROOT/Data/SIGMINE/Clean"
+global RAW_DIR     "$PROJECT_ROOT/Data/SIGMINE"
+global WORKING_DIR "$PROJECT_ROOT/Working/SIGMINE"
 
-
-capture mkdir "$CLEAN_DIR"
+capture mkdir "$WORKING_DIR"
 
 
 ********************************************************************************
@@ -59,7 +59,7 @@ capture mkdir "$CLEAN_DIR"
 * and stack the two into one dataset.
 * --------------------------------------------------------------------
 
-cd "$CLEAN_DIR"
+cd "$WORKING_DIR"
 
 * --- Active processes ---
 spshape2dta "$RAW_DIR/Active/BRASIL", replace saving(temp_active)
@@ -78,12 +78,7 @@ use "temp_active.dta", clear
 append using "temp_inactive.dta"
 
 * --------------------------------------------------------------------
-* Rename Portuguese/coded column names to clear English ones, all in
-* one step. Note this is all-or-nothing: if ANM's real column names
-* don't exactly match what's on the left below (check the "describe"
-* output just above this block in the log), the whole rename fails at
-* once rather than silently skipping just the mismatched one - that's
-* the trade-off for doing it in a single step instead of one at a time.
+* Rename Portuguese/coded column names to clear English ones
 * --------------------------------------------------------------------
 
 rename (PROCESSO NUMERO ANO AREA_HA ID FASE ULT_EVENTO NOME SUBS USO UF DSProcesso _CX _CY) ///
@@ -91,40 +86,8 @@ rename (PROCESSO NUMERO ANO AREA_HA ID FASE ULT_EVENTO NOME SUBS USO UF DSProces
 
 capture drop _ID
 
-* --------------------------------------------------------------------
-* Label every variable: one local with all the new names, then one
-* loop that walks through them and labels each in turn.
-* --------------------------------------------------------------------
-
-local newnames process_id_full process_number process_year area_hectares ///
-    sigmine_internal_id phase last_event holder_name substance use_type ///
-    state process_description centroid_lon centroid_lat active_process
-
-foreach v of local newnames {
-
-    local lbl = cond("`v'" == "process_id_full", "Full process ID, number and year", ///
-                cond("`v'" == "process_number", "Process number, without the year", ///
-                cond("`v'" == "process_year", "Year the process was originally filed", ///
-                cond("`v'" == "area_hectares", "Area of the claim or concession, in hectares", ///
-                cond("`v'" == "sigmine_internal_id", "ANM's internal SIGMINE record ID", ///
-                cond("`v'" == "phase", "Current stage in ANM's permitting pipeline", ///
-                cond("`v'" == "last_event", "Most recent recorded event or status update", ///
-                cond("`v'" == "holder_name", "Name of the process's titleholder", ///
-                cond("`v'" == "substance", "Mineral substance being claimed or extracted", ///
-                cond("`v'" == "use_type", "Intended use of the extracted substance", ///
-                cond("`v'" == "state", "Brazilian state abbreviation", ///
-                cond("`v'" == "process_description", "Free-text description of the process", ///
-                cond("`v'" == "centroid_lon", "Approximate longitude of the claim's centroid", ///
-                cond("`v'" == "centroid_lat", "Approximate latitude of the claim's centroid", ///
-                cond("`v'" == "active_process", "Which SIGMINE file this process came from", ///
-                "Error `v'")))))))))))))))
-
-    label variable `v' "`lbl'"
-
-}
-
-label define active_lbl 0 "Inactive / closed" 1 "Active"
-label values active_process active_lbl
+* labels get set later, in Section 4 - collapse (Section 3) wipes them,
+* so no point setting them before that.
 
 
 ********************************************************************************
@@ -140,7 +103,6 @@ label values active_process active_lbl
 * --------------------------------------------------------------------
 
 generate phase_original = trim(phase)
-label variable phase_original "Current stage in ANM's permitting pipeline, original Portuguese text"
 order phase_original, after(phase)
 
 replace phase = cond(phase_original == "APTO PARA DISPONIBILIDADE", "Eligible for availability", ///
@@ -160,8 +122,6 @@ replace phase = cond(phase_original == "APTO PARA DISPONIBILIDADE", "Eligible fo
             cond(phase_original == "REQUERIMENTO DE REGISTRO DE EXTRAÇÃO", "Extraction registration request", ///
             phase_original)))))))))))))))
 
-label variable phase "Current stage in ANM's permitting pipeline"
-
 * --------------------------------------------------------------------
 * Translate "substance" into English.
 *
@@ -169,7 +129,6 @@ label variable phase "Current stage in ANM's permitting pipeline"
 * --------------------------------------------------------------------
 
 generate substance_original = trim(substance)
-label variable substance_original "Mineral substance being claimed or extracted, original Portuguese text"
 order substance_original, after(substance)
 
 preserve
@@ -516,27 +475,109 @@ replace substance = substance_original if _merge == 1
 
 drop substance_english _merge
 
-label variable substance "Mineral substance being claimed or extracted"
+********************************************************************************
+********************************************************************************
+**********															 ***********
+********** Section 3: Collapse to one row per mining process         ***********
+**********															 ***********
+********************************************************************************
+********************************************************************************
+
+/* Notes:
+
+SIGMINE file comes in parcels not individual mines. Collapse this down to get 
+a unique observation per mine. 
+
+A small portion of mines (~3%) have duplicate (one in the active
+and another in the inactive section) so fix those duplicates.
+*/
+
+
+* --- handle the active/inactive case first ---
+* A process has both an active and an inactive copy exactly when the
+* min of active_process across its rows is 0 and the max is 1.
+bysort process_number process_year: egen byte min_active = min(active_process)
+bysort process_number process_year: egen byte max_active = max(active_process)
+generate byte has_both_statuses = (min_active == 0 & max_active == 1)
+
+* the inactive copy is the blank one - drop it, keep the informative row(s)
+drop if has_both_statuses == 1 & active_process == 0
+
+* record that these processes are actually closed today, even though
+* we're keeping the data from when they were still active
+replace active_process = 0 if has_both_statuses == 1
+
+drop min_active max_active has_both_statuses
+
+* --- now collapse the remaining (parcel-level) duplicates ---
+* area_hectares sums across parcels; everything else should already be
+* identical within a process at this point, so "first" just picks it up.
+collapse (sum) area_hectares ///
+         (first) process_id_full sigmine_internal_id phase phase_original ///
+                 last_event holder_name substance substance_original use_type ///
+                 state process_description centroid_lon centroid_lat active_process, ///
+         by(process_number process_year)
+
+
+
+
 
 ********************************************************************************
 ********************************************************************************
 **********															 ***********
-********** 			 Seciton 3: Clean-up files and save				 ***********
+********** 				Section 4: Clean-up files and save           ***********
 **********															 ***********
 ********************************************************************************
 ********************************************************************************
+
+* --------------------------------------------------------------------
+* Label variables
+* --------------------------------------------------------------------
+
+local newnames process_id_full process_number process_year area_hectares ///
+    sigmine_internal_id phase phase_original last_event holder_name substance ///
+    substance_original use_type state process_description centroid_lon ///
+    centroid_lat active_process
+
+foreach v of local newnames {
+
+    local lbl = cond("`v'" == "process_id_full", "Full process ID, number and year", ///
+                cond("`v'" == "process_number", "Process number, without the year", ///
+                cond("`v'" == "process_year", "Year the process was originally filed", ///
+                cond("`v'" == "area_hectares", "Total area of the claim or concession across all parcels, in hectares", ///
+                cond("`v'" == "sigmine_internal_id", "ANM's internal SIGMINE record ID", ///
+                cond("`v'" == "phase", "Current stage in ANM's permitting pipeline", ///
+                cond("`v'" == "phase_original", "Current stage in ANM's permitting pipeline, original Portuguese text", ///
+                cond("`v'" == "last_event", "Most recent recorded event or status update", ///
+                cond("`v'" == "holder_name", "Name of the process's titleholder", ///
+                cond("`v'" == "substance", "Mineral substance being claimed or extracted", ///
+                cond("`v'" == "substance_original", "Mineral substance being claimed or extracted, original Portuguese text", ///
+                cond("`v'" == "use_type", "Intended use of the extracted substance", ///
+                cond("`v'" == "state", "Brazilian state abbreviation", ///
+                cond("`v'" == "process_description", "Free-text description of the process", ///
+                cond("`v'" == "centroid_lon", "Approximate longitude of the claim's centroid", ///
+                cond("`v'" == "centroid_lat", "Approximate latitude of the claim's centroid", ///
+                cond("`v'" == "active_process", "Which SIGMINE file this process came from", ///
+                "Error `v'")))))))))))))))))
+
+    label variable `v' "`lbl'"
+
+}
+
+label define active_lbl 0 "Inactive / closed" 1 "Active"
+label values active_process active_lbl
 
 * --------------------------------------------------------------------
 * Save the final dataset and clean up the temporary files we no longer
 * need.
 * --------------------------------------------------------------------
 
-save "$CLEAN_DIR/sigmine_mines.dta", replace
+save "$WORKING_DIR/sigmine_mine_level.dta", replace
 
 local delete = "temp_active temp_active_shp temp_inactive temp_inactive_shp"
 
 foreach del in `delete' {
 
-capture erase "$CLEAN_DIR/`del'.dta"
+capture erase "$WORKING_DIR/`del'.dta"
 
 }

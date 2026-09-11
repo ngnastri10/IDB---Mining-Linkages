@@ -40,10 +40,10 @@ if "$PROJECT_ROOT" == "" {
     exit 198
 }
 
-global RAW_DIR     "$PROJECT_ROOT/Data/SIGMINE"
-global WORKING_DIR "$PROJECT_ROOT/Working/SIGMINE"
+local SIGMINE_RAW     "$RAW_DIR/SIGMINE"
+local SIGMINE_WORKING "$WORKING_DIR/SIGMINE"
 
-capture mkdir "$WORKING_DIR"
+capture mkdir "`SIGMINE_WORKING'"
 
 
 ********************************************************************************
@@ -59,16 +59,16 @@ capture mkdir "$WORKING_DIR"
 * and stack the two into one dataset.
 * --------------------------------------------------------------------
 
-cd "$WORKING_DIR"
+cd "`SIGMINE_WORKING'"
 
 * --- Active processes ---
-spshape2dta "$RAW_DIR/Active/BRASIL", replace saving(temp_active)
+spshape2dta "`SIGMINE_RAW'/Active/BRASIL", replace saving(temp_active)
 use "temp_active.dta", clear
 generate byte active_process = 1
 save "temp_active.dta", replace
 
 * --- Inactive / closed processes ---
-spshape2dta "$RAW_DIR/Inactive/PROCESSOS_INATIVOS", replace saving(temp_inactive)
+spshape2dta "`SIGMINE_RAW'/Inactive/PROCESSOS_INATIVOS", replace saving(temp_inactive)
 use "temp_inactive.dta", clear
 generate byte active_process = 0
 save "temp_inactive.dta", replace
@@ -572,12 +572,12 @@ label values active_process active_lbl
 * need.
 * --------------------------------------------------------------------
 
-save "$WORKING_DIR/sigmine_mine_level.dta", replace
+save "`SIGMINE_WORKING'/sigmine_mine_level.dta", replace
 
 local delete = "temp_active temp_active_shp temp_inactive temp_inactive_shp"
 
 foreach del in `delete' {
 
-capture erase "$WORKING_DIR/`del'.dta"
+capture erase "`SIGMINE_WORKING'/`del'.dta"
 
 }

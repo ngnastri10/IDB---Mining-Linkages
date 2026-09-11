@@ -28,6 +28,13 @@
 global PROJECT_ROOT "C:\Users\ngnas\OneDrive\Desktop\PhD Documents\Publications\IDB - Mining"
 global REPO_PATH "C:\Users\ngnas\OneDrive\Desktop\PhD Documents\Publications\IDB - Mining\Code"
 
+* RAW_DIR and WORKING_DIR are globals, so they mean the same thing in
+* every do-file - the top-level Data/Working folders, nothing more
+* specific. Each clean_*.do file points to its own source's subfolder
+* with a *local* macro instead of redefining these.
+global RAW_DIR     "$PROJECT_ROOT/Data"
+global WORKING_DIR "$PROJECT_ROOT/Working"
+
 
 ********************************************************************************
 ********************************************************************************

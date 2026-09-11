@@ -30,10 +30,10 @@ if "$PROJECT_ROOT" == "" {
     exit 198
 }
 
-global RAW_DIR     "$PROJECT_ROOT/Data/CFEM"
-global WORKING_DIR "$PROJECT_ROOT/Working/CFEM"
+local CFEM_RAW     "$RAW_DIR/CFEM"
+local CFEM_WORKING "$WORKING_DIR/CFEM"
 
-capture mkdir "$WORKING_DIR"
+capture mkdir "`CFEM_WORKING'"
 
 ********************************************************************************
 ********************************************************************************
@@ -46,7 +46,7 @@ capture mkdir "$WORKING_DIR"
 * encoding("windows-1252") because this file uses the same accented-
 * character encoding as SIGMINE/SCM, not UTF-8 - if Portuguese text comes
 * out garbled below, this is the first thing to check.
-import delimited using "$RAW_DIR/Arrecadacao/CFEM_Arrecadacao.csv", ///
+import delimited using "`CFEM_RAW'/Arrecadacao/CFEM_Arrecadacao.csv", ///
     clear varnames(1) encoding("windows-1252")
 
 
@@ -451,6 +451,6 @@ drop record_created_at
 ********************************************************************************
 ********************************************************************************
 
-save "$WORKING_DIR/cfem_process_month.dta", replace
+save "`CFEM_WORKING'/cfem_process_month.dta", replace
 
-di as result "Done - saved `=_N' royalty payment records to $WORKING_DIR/cfem_process_month.dta"
+di as result "Done - saved `=_N' royalty payment records to `CFEM_WORKING'/cfem_process_month.dta"

@@ -1,0 +1,20 @@
+#!/bin/bash
+
+#BSUB -J rais_clean
+#BSUB -q normal
+#BSUB -o %J.out
+#BSUB -e %J.err
+#BSUB -R "rusage[mem=40000]"
+#BSUB -N
+#BSUB -u mail_user nn3495a@american.edu
+
+# Print every command before running it, so if this dies before Stata even
+# starts (bad module, bad path, etc.) that shows up in %J.out instead of
+# leaving it blank.
+set -x
+
+module load python312
+
+cd /home/nn3495a-hpc/IDB/Mining/Code
+
+/app/Stata18-MP/stata-se -b do /home/nn3495a-hpc/IDB/Mining/Code/clean_rais_scrap_hpc.do

@@ -1,0 +1,15 @@
+#!/bin/bash
+
+#BSUB -J rais_pull
+#BSUB -q normal
+#BSUB -o %J.out
+#BSUB -e %J.err
+#BSUB -R "rusage[mem=20000]"
+#BSUB -N
+#BSUB -u mail_user nn3495a@american.edu
+
+module load python312
+
+cd /home/nn3495a-hpc/IDB/Code
+
+python3 /home/nn3495a-hpc/IDB/Code/pull_rais_hpc.py

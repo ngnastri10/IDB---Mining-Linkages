@@ -10,7 +10,7 @@
 *   Data/CFEM/Arrecadacao/CFEM_Arrecadacao.csv
 *
 * Output:
-*   Working/CFEM/cfem_process_month.dta
+*   Working/Mines/CFEM/cfem_process_month.dta
 *
 * BEFORE running this file, run Code/config.do once in your Stata session.
 *
@@ -31,8 +31,9 @@ if "$PROJECT_ROOT" == "" {
 }
 
 local CFEM_RAW     "$RAW_DIR/CFEM"
-local CFEM_WORKING "$WORKING_DIR/CFEM"
+local CFEM_WORKING "$WORKING_DIR/Mines/CFEM"
 
+capture mkdir "$WORKING_DIR/Mines"
 capture mkdir "`CFEM_WORKING'"
 
 ********************************************************************************

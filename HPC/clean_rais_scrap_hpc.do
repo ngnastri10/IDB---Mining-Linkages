@@ -10,10 +10,79 @@ capture log close
 log using "`HPC_ROOT'/Mining/Code/clean_rais_scrap_hpc_run.log", replace text
 
 local startyear = 2000
-local endyear = 2001
+local endyear = 2025
+
+* RESUME MODE - on/off switch.
+*   1 = a year whose combined output already exists on disk for every
+*       collapse type that applies to it gets skipped past Sections 1-4
+*       (the expensive unzip/import/clean/collapse-per-state work) -
+*       only Section 5 (rebuilding the across-years file) runs for it,
+*       reading whatever's already there. Use this to pick back up after
+*       a crash/interruption without redoing years that already finished.
+*   0 = every year in the range gets fully reprocessed from scratch
+*       regardless of what's already on disk - use this if the cleaning
+*       logic itself changed and old output can't be trusted anymore.
+local resume_mode = 1
+
+* CNAE67 crosswalk (IBGE's 67-sector national-accounts activity
+* classification) - built once here, not inside the year loop below,
+* since it's the same file every year. See build_cnae67_crosswalk.py
+* for the actual download/cleaning logic.
+capture confirm file "`HPC_ROOT'/Data/Crosswalks/cnae2_to_cnae67.dta"
+if _rc {
+	capture mkdir "`HPC_ROOT'"
+	capture mkdir "`HPC_ROOT'/Data"
+	capture mkdir "`HPC_ROOT'/Data/Crosswalks"
+	shell python3 "`HPC_ROOT'/Mining/Code/build_cnae67_crosswalk.py" "`HPC_ROOT'/Data/Crosswalks/cnae2_to_cnae67.dta"
+
+	* shell doesn't check whether the script it ran actually succeeded -
+	* it just moves on regardless, so confirm the file is really there
+	* now. Without this, a failed download/build here silently turns
+	* into a confusing "variable cnae67 not found" several steps later
+	* instead of a clear error right where the real problem is.
+	capture confirm file "`HPC_ROOT'/Data/Crosswalks/cnae2_to_cnae67.dta"
+	if _rc {
+		di as error "build_cnae67_crosswalk.py did not produce the crosswalk file - run it directly (not through Stata) to see the real error."
+		exit 601
+	}
+}
 
 forvalues year = `startyear'/`endyear' {
-	
+
+	* cnae2/cnae2_subclass only exist from 2006 onward - this determines
+	* which collapse types (and so which folders/output files) apply to
+	* this year. Computed once here and reused throughout (Sections 3, 4,
+	* 5, and the resume check right below) instead of recomputing the
+	* same formula separately in each section.
+	local collapse_var = cond(`year' < 2006, "cnae95", "cnae95 cnae2 cnae2_subclass cnae67")
+
+	* RESUME CHECK - a year only counts as "already done" if EVERY
+	* collapse type that applies to it already has its combined per-year
+	* file on disk, not just some of them. A naive "does this year have
+	* any output at all" check would wrongly call an incomplete year
+	* done - which is exactly what broke last time: cnae2's file didn't
+	* exist yet for years before 2006, and a since-fixed bug in Section 5
+	* tried to append onto a file that was never created.
+	local year_done = 1
+	foreach var in "" `collapse_var' {
+		local foldername = cond("`var'" == "", "Municipality Only", ///
+						   cond("`var'" == "cnae95", "CNAE95", ///
+						   cond("`var'" == "cnae2", "CNAE2", ///
+						   cond("`var'" == "cnae2_subclass", "CNAE2_subclass", ///
+						   "CNAE67"))))
+		capture confirm file "`HPC_ROOT'/Mining/Working/RAIS/`year'/`foldername'/cleaned_`year'_allstates.dta"
+		if _rc {
+			local year_done = 0
+		}
+	}
+
+	if `resume_mode' == 1 & `year_done' == 1 {
+
+		di as result "Year `year' - resume_mode on and already fully processed, skipping straight to Section 5."
+
+	}
+	else {
+
 	********************************************************************************
 	********************************************************************************
 	**********															 ***********
@@ -96,30 +165,37 @@ forvalues year = `startyear'/`endyear' {
 		********************************************************************************
 
 		/* Notes:
-			
-			Format of files changed in 2018: pre-2018 is one file per state,
-			semicolon-delimited, extracted as .txt. Starting in 2018 is one file per
-			region (multiple states combined), comma-delimited with quoted
-			values, extracted as .COMT.
-		
-		*/ 
-		
+
+			Two separate format changes, confirmed NOT to happen in the same
+			year: region-grouping (multiple states combined into one file)
+			starts in 2018, but the comma-delimited/.COMT/quoted-header
+			format doesn't start until sometime after that - 2018 itself
+			extracts as plain old-style semicolon-delimited .txt, just with
+			region-grouped files instead of per-state ones. Since we don't
+			know the exact year the second change happens either, detect it
+			from the actual file on disk after extraction rather than
+			guessing another year cutoff - whichever extension actually
+			landed (.txt or .COMT) determines the delimiter too, since both
+			come from the same export-system change on Brazil's end.
+
+		*/
+
 		******************
 		** Import Files **
 		******************
-		
-		local raw_ext = cond(`year' < 2018, "txt", "COMT")
-		
-		* Import if year is before 2018
-		if `year' < 2018 {
-			import delimited using "`RAIS_RAW'/`region'.`raw_ext'", clear varnames(1) ///
-				delimiter(";") encoding("windows-1252")
+
+		capture confirm file "`RAIS_RAW'/`region'.txt"
+		if !_rc {
+			local raw_ext "txt"
+			local raw_delim ";"
 		}
-		* Import if year is 2018 or later
 		else {
-			import delimited using "`RAIS_RAW'/`region'.`raw_ext'", clear varnames(1) ///
-				delimiter(",") encoding("windows-1252")
+			local raw_ext "COMT"
+			local raw_delim ","
 		}
+
+		import delimited using "`RAIS_RAW'/`region'.`raw_ext'", clear varnames(1) ///
+			delimiter("`raw_delim'") encoding("windows-1252")
 
 		generate int year = `year'
 		
@@ -168,6 +244,26 @@ forvalues year = `startyear'/`endyear' {
 		capture rename cnae_2_0_subclasse cnae2_subclass
 		capture rename cnae20subclassecodigo cnae2_subclass
 		capture rename cnae20subclasse cnae2_subclass
+
+		* cnae2/cnae2_subclass carry a trailing check digit in the raw
+		* data that isn't part of the real classification code -
+		* confirmed directly against a real raw Estab file (same RAIS
+		* CNAE 2.0 system, same convention): Classe "01113" is base code
+		* 0111 plus check digit 3, not the number 1113. Subclasse embeds
+		* the check digit in the middle instead of the end: "9499500" is
+		* base 9499 + check digit 5 + subclass suffix 00, not 9499500
+		* itself. Without stripping these, cnae2 doesn't match the
+		* CNAE67 crosswalk (which uses the real base code) at all -
+		* confirmed this broke the cnae67 merge in the Estab pipeline,
+		* only ~4 of 67 codes matched, mostly by coincidence. tostring
+		* first (format-padded) in case Stata auto-imported the column
+		* as numeric and dropped the leading zero - capture wraps both
+		* since cnae2/cnae2_subclass may not exist yet this year (years
+		* before ~2010), same reasoning as the destring loop below.
+		capture tostring cnae2, replace format(%05.0f)
+		capture replace cnae2 = substr(cnae2, 1, 4)
+		capture tostring cnae2_subclass, replace format(%07.0f)
+		capture replace cnae2_subclass = substr(cnae2_subclass, 1, 4) + substr(cnae2_subclass, 6, 2)
 
 		** Establishment size **
 		capture rename tamanho_estabelecimento estab_size
@@ -230,6 +326,15 @@ forvalues year = `startyear'/`endyear' {
 		** Age **
 		capture rename idade age
 
+		** Sex - plain ASCII header, no accents, present unchanged in
+		** every year. Coded 1=Male, 2=Female (verified against real
+		** 2015 data). Not directly rename-tested against every era's
+		** actual describe output the way most other vars were, so watch
+		** for a rename failure on the first run of a new year - it's in
+		** needed_vars, so it'll error loudly rather than fail silently.
+		capture rename sexotrabalhador sex
+		capture rename sexocódigo sex
+
 		** Race (doesn't exist before ~2010) **
 		capture rename ra_a_cor race
 		capture rename raca_cor race
@@ -241,6 +346,16 @@ forvalues year = `startyear'/`endyear' {
 		capture rename mes_desligamento term_month
 		capture rename mêsdesligamentocódigo term_month
 		capture rename mêsdesligamento term_month
+
+		** Admission (hire) month - same "Mês X" pattern as termination
+		** month above, so the same sanitized variants apply. 0 = no hire
+		** event this year (continuing employment), 1-12 = real hire
+		** month (verified against real 2015 data, same convention as
+		** term_month's 0=not terminated).
+		capture rename m_s_admiss_o hire_month
+		capture rename mes_admissao hire_month
+		capture rename mêsadmissãocódigo hire_month
+		capture rename mêsadmissão hire_month
 
 		** Termination reason (10-12 = dismissal, see code table) **
 		capture rename motivo_desligamento term_reason
@@ -319,7 +434,7 @@ forvalues year = `startyear'/`endyear' {
 		* Confirm all necessary variables are renamed & kept
 		local needed_vars municipality employed tenure cnae95 ///
 			estab_size legal_nature wage_dec wage_avg ///
-			age nationality educ term_month term_reason year  state
+			age nationality educ term_month term_reason sex hire_month year  state
 
 		foreach v of local needed_vars {
 			capture confirm variable `v'
@@ -349,7 +464,8 @@ forvalues year = `startyear'/`endyear' {
 		destring employed, replace force
 
 		local integer_vars municipality cnae2 cnae95 cnae2_subclass ///
-			estab_size legal_nature age race nationality educ term_month term_reason
+			estab_size legal_nature age race nationality educ term_month term_reason ///
+			sex hire_month
 		foreach v of local integer_vars {
 			capture destring `v', replace force
 		}
@@ -456,11 +572,34 @@ forvalues year = `startyear'/`endyear' {
 		generate byte term_nov = (term_month == 11) if inrange(term_month, 1, 12)
 		generate byte term_dec = (term_month == 12) if inrange(term_month, 1, 12)
 
+		* Sex share - 1=Male, 2=Female (verified against real data). Just
+		* one binary variable, not two - share_female is redundant with
+		* share_male (1 - share_male) once this collapses to a mean.
+		generate byte share_male = (sex == 1) if !missing(sex)
+
+		* Hiring month - same idea as termination month above, just for
+		* admissions instead: 12 count variables, missing (not 0) for
+		* rows with no hire event this year (hire_month outside 1-12).
+		* Summed, not averaged, in the collapse below - lets separations
+		* (term_*) and hires (hire_*) be compared month by month.
+		generate byte hire_jan = (hire_month == 1)  if inrange(hire_month, 1, 12)
+		generate byte hire_feb = (hire_month == 2)  if inrange(hire_month, 1, 12)
+		generate byte hire_mar = (hire_month == 3)  if inrange(hire_month, 1, 12)
+		generate byte hire_apr = (hire_month == 4)  if inrange(hire_month, 1, 12)
+		generate byte hire_may = (hire_month == 5)  if inrange(hire_month, 1, 12)
+		generate byte hire_jun = (hire_month == 6)  if inrange(hire_month, 1, 12)
+		generate byte hire_jul = (hire_month == 7)  if inrange(hire_month, 1, 12)
+		generate byte hire_aug = (hire_month == 8)  if inrange(hire_month, 1, 12)
+		generate byte hire_sep = (hire_month == 9)  if inrange(hire_month, 1, 12)
+		generate byte hire_oct = (hire_month == 10) if inrange(hire_month, 1, 12)
+		generate byte hire_nov = (hire_month == 11) if inrange(hire_month, 1, 12)
+		generate byte hire_dec = (hire_month == 12) if inrange(hire_month, 1, 12)
+
 		* These are all categorical codes - already turned into share/count
 		* variables above, so the raw codes themselves get dropped here
 		* rather than falling into the generic (mean) list below, where
 		* averaging a category code is meaningless.
-		drop term_reason term_month nationality legal_nature estab_size
+		drop term_reason term_month nationality legal_nature estab_size sex hire_month
 
 		* Generate County Population Variable
 		gen population = 1
@@ -498,17 +637,18 @@ forvalues year = `startyear'/`endyear' {
 					are available at finer granularity so collapse done at finest granularity.
 
 		*/
-		
-		local collapse_var = cond(`year' < 2006, "cnae95", "cnae95 cnae2 cnae2_subclass")
+
+		* collapse_var already computed once at the top of the year loop.
 		foreach var in "" `collapse_var' {
-		
-		* Make folders for each type of collapse - 4 outcomes only need 3
-		* nested cond()s, not 4 (each cond() needs exactly 3 arguments:
+
+		* Make folders for each type of collapse - 5 outcomes need 4
+		* nested cond()s (each cond() needs exactly 3 arguments:
 		* condition, true-value, false-value).
 		local foldername = cond("`var'" == "", "Municipality Only", ///
 						   cond("`var'" == "cnae95", "CNAE95", ///
 						   cond("`var'" == "cnae2", "CNAE2", ///
-						   "CNAE2_subclass")))
+						   cond("`var'" == "cnae2_subclass", "CNAE2_subclass", ///
+						   "CNAE67"))))
 
 		cap mkdir "`HPC_ROOT'/Mining/Working/RAIS/`year'/`foldername'"
 		
@@ -518,24 +658,44 @@ forvalues year = `startyear'/`endyear' {
 
 			preserve
 
+			* CNAE67 (IBGE's 67-sector activity classification) - only
+			* merged in on the pass that's actually collapsing by it, not
+			* every pass (cnae95/cnae2/cnae2_subclass/municipality-only
+			* don't need it). cnae67_var mirrors that: "cnae67" on the
+			* pass that merged it in, blank otherwise, so the ds
+			* exclusion list below never names a variable that isn't
+			* actually in the dataset this pass.
+			local cnae67_var ""
+			if "`var'" == "cnae67" {
+				merge m:1 cnae2 using "`HPC_ROOT'/Data/Crosswalks/cnae2_to_cnae67.dta", keep(master match) nogenerate
+				local cnae67_var "cnae67"
+			}
+
 			* Get all variables we calculate mean for. cnae95/cnae2/
-			* cnae2_subclass all excluded regardless of which one is
-			* `var' this pass - whichever one IS `var' would otherwise be
-			* both a mean target and the by() variable (which Stata
-			* rejects), and the other two are category codes that
-			* shouldn't be averaged either - they're only still in the
-			* dataset because a later pass needs them as its own by()
-			* variable. The 12 term_* month dummies are excluded too since
-			* they're summed (counts) below instead, not averaged.
-			ds population state year municipality cnae95 cnae2 cnae2_subclass ///
+			* cnae2_subclass/cnae67_var excluded regardless of which one
+			* is `var' this pass - whichever one IS `var' would otherwise
+			* be both a mean target and the by() variable (which Stata
+			* rejects), and the others are category codes that shouldn't
+			* be averaged either - they're only still in the dataset
+			* because a later pass needs them as its own by() variable.
+			* The 12 term_* and 12 hire_* month dummies are excluded too
+			* since they're summed (counts) below instead, not averaged.
+			* share_male isn't
+			* excluded - that's a real share, meant to be averaged like
+			* race/nat/educ.
+			ds population state year municipality cnae95 cnae2 cnae2_subclass `cnae67_var' ///
 				term_jan term_feb term_mar term_apr term_may term_jun ///
-				term_jul term_aug term_sep term_oct term_nov term_dec, not
+				term_jul term_aug term_sep term_oct term_nov term_dec ///
+				hire_jan hire_feb hire_mar hire_apr hire_may hire_jun ///
+				hire_jul hire_aug hire_sep hire_oct hire_nov hire_dec, not
 			di as text "CHECKPOINT: var='`var'' r(varlist)=`r(varlist)'"
 
 			collapse (mean) "`r(varlist)'" ///
 					 (sum) population number_employed = employed ///
 					 term_jan term_feb term_mar term_apr term_may term_jun ///
 					 term_jul term_aug term_sep term_oct term_nov term_dec ///
+					 hire_jan hire_feb hire_mar hire_apr hire_may hire_jun ///
+					 hire_jul hire_aug hire_sep hire_oct hire_nov hire_dec ///
 					 (firstnm) state year, ///
 					 by(municipality "`var'")
 
@@ -575,14 +735,15 @@ forvalues year = `startyear'/`endyear' {
 	** Merge All States Into One Year **
 	************************************
 
-	local collapse_var = cond(`year' < 2006, "cnae95", "cnae95 cnae2 cnae2_subclass")
+	* collapse_var already computed once at the top of the year loop.
 	foreach var in "" `collapse_var' {
 
 		* Make folders for each type of collapse
 		local foldername = cond("`var'" == "", "Municipality Only", ///
 						   cond("`var'" == "cnae95", "CNAE95", ///
 						   cond("`var'" == "cnae2", "CNAE2", ///
-						   "CNAE2_subclass")))
+						   cond("`var'" == "cnae2_subclass", "CNAE2_subclass", ///
+						   "CNAE67"))))
 
 		* Point to the correct directory
 		local dir "`HPC_ROOT'/Mining/Working/RAIS/`year'/`foldername'"
@@ -604,6 +765,9 @@ forvalues year = `startyear'/`endyear' {
 
 	}
 
+	} // closes the "else" opened after the resume check above - Sections
+	  // 1-4 only run when this year wasn't already fully done.
+
 	********************************************************************************
 	********************************************************************************
 	**********															 ***********
@@ -612,22 +776,33 @@ forvalues year = `startyear'/`endyear' {
 	********************************************************************************
 	********************************************************************************
 
-	* Same collapse_var as Section 4 above - only cnae95 exists pre-2006.
+	* Always runs, whether Sections 1-4 above ran or got skipped by resume
+	* mode - reads whichever per-year files exist (freshly made above, or
+	* already on disk from an earlier run) and folds them into the
+	* running All_Years file. collapse_var was computed once at the top
+	* of the year loop, reused here.
 	foreach var in "" `collapse_var' {
 
 		local foldername = cond("`var'" == "", "Municipality Only", ///
 						   cond("`var'" == "cnae95", "CNAE95", ///
 						   cond("`var'" == "cnae2", "CNAE2", ///
-						   "CNAE2_subclass")))
+						   cond("`var'" == "cnae2_subclass", "CNAE2_subclass", ///
+						   "CNAE67"))))
 
 		local dir "`HPC_ROOT'/Mining/Working/RAIS/`year'/`foldername'"
 		local final_dir "`HPC_ROOT'/Mining/Working/RAIS/All_Years/`foldername'"
 
 		use "`dir'/cleaned_`year'_allstates.dta", clear
 
-		if `year' == `startyear' {
-			capture mkdir "`HPC_ROOT'/Mining/Working/RAIS/All_Years"
-			capture mkdir "`final_dir'"
+		* Check whether this foldername's file actually exists yet,
+		* rather than comparing to the global startyear - cnae2 and
+		* cnae2_subclass don't start until 2006, so "first year we've
+		* ever seen this foldername" isn't the same thing as "first year
+		* of the whole run" for those two.
+		capture mkdir "`HPC_ROOT'/Mining/Working/RAIS/All_Years"
+		capture mkdir "`final_dir'"
+		capture confirm file "`final_dir'/cleaned_all_years.dta"
+		if _rc {
 			save "`final_dir'/cleaned_all_years.dta", replace
 		}
 		else {

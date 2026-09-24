@@ -17,6 +17,11 @@ Same file-naming caveat as the local version - older years ship one .7z
 per state, newer years ship region-grouped files instead. This just grabs
 every .7z it finds rather than assuming either scheme.
 
+A few years (2004, 2005, confirmed - possibly others) ship the
+Estabelecimentos file as a plain .zip instead of .7z, while everything
+else that year is still .7z - the old version of this script silently
+skipped those, since it only matched ".7z". Now grabs both.
+
 Setup on the HPC before running:
     module load python312        (the default python3 here is 3.6.8, too old for py7zr)
     pip install --user py7zr     (no admin rights on a shared HPC, so --user)
@@ -26,6 +31,7 @@ import sys
 import time
 import shutil
 import ftplib
+import zipfile
 from pathlib import Path
 
 try:
@@ -62,7 +68,7 @@ def connect():
 
 
 def download_year(ftp, year, attempts=3):
-    """Download every .7z file sitting in one year's FTP folder.
+    """Download every .7z or .zip file sitting in one year's FTP folder.
 
     Returns (ftp, failures) - ftp may be a brand new connection object if
     the original one died and got reconnected along the way, and failures
@@ -80,7 +86,10 @@ def download_year(ftp, year, attempts=3):
     for attempt in range(1, attempts + 1):
         try:
             ftp.cwd(remote_dir)
-            filenames = [f for f in ftp.nlst() if f.lower().endswith(".7z")]
+            # A few years ship the Estabelecimentos file as .zip instead
+            # of .7z (everything else that year is still .7z) - catch
+            # both rather than assuming .7z is the only format.
+            filenames = [f for f in ftp.nlst() if f.lower().endswith((".7z", ".zip"))]
             break
         except Exception as e:
             print(f"  Listing {year} failed (attempt {attempt}): {e}")
@@ -99,7 +108,7 @@ def download_year(ftp, year, attempts=3):
         print(f"  Giving up on listing {year} after {attempts} attempts")
         return ftp, [f"<could not list {year}>"]
 
-    print(f"{year}: found {len(filenames)} .7z files")
+    print(f"{year}: found {len(filenames)} archive files (.7z/.zip)")
 
     failures = []
 
@@ -152,12 +161,14 @@ def download_year(ftp, year, attempts=3):
 
 
 def extract_year(year):
-    """Decompress every .7z downloaded for one year into raw_txt/<year>/."""
+    """Decompress every .7z/.zip downloaded for one year into raw_txt/<year>/."""
     src_folder = RAW_7Z_DIR / str(year)
     dest_folder = RAW_TXT_DIR / str(year)
     dest_folder.mkdir(parents=True, exist_ok=True)
 
-    for archive_path in src_folder.glob("*.7z"):
+    archives = list(src_folder.glob("*.7z")) + list(src_folder.glob("*.zip"))
+
+    for archive_path in archives:
         already_done = list(dest_folder.glob(f"{archive_path.stem}*"))
         if already_done:
             print(f"  {archive_path.name} already extracted, skipping")
@@ -171,8 +182,15 @@ def extract_year(year):
 
         print(f"  Extracting {archive_path.name}...")
         try:
-            with py7zr.SevenZipFile(archive_path, mode="r") as archive:
-                archive.extractall(path=temp_folder)
+            # py7zr only understands .7z - a real .zip (the Estabelecimentos
+            # exception in some years) needs the standard library's zipfile
+            # instead, so branch on the actual extension.
+            if archive_path.suffix.lower() == ".zip":
+                with zipfile.ZipFile(archive_path, mode="r") as archive:
+                    archive.extractall(path=temp_folder)
+            else:
+                with py7zr.SevenZipFile(archive_path, mode="r") as archive:
+                    archive.extractall(path=temp_folder)
             for extracted_file in temp_folder.iterdir():
                 extracted_file.rename(dest_folder / extracted_file.name)
             temp_folder.rmdir()

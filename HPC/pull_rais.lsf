@@ -10,6 +10,6 @@
 
 module load python312
 
-cd /home/nn3495a-hpc/IDB/Code
+cd /home/nn3495a-hpc/IDB/Mining/Code
 
-python3 /home/nn3495a-hpc/IDB/Code/pull_rais_hpc.py
+python3 /home/nn3495a-hpc/IDB/Mining/Code/pull_rais_hpc.py

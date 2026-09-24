@@ -12,7 +12,7 @@
 *   Data/SIGMINE/Inactive/PROCESSOS_INATIVOS.shp (+ .dbf, .shx, etc.)
 *
 * Output:
-*   Working/SIGMINE/sigmine_mine_level.dta
+*   Working/Mines/SIGMINE/sigmine_mine_level.dta
 *
 * Requires Stata's built-in spatial tools (spshape2dta), which need a
 * reasonably modern Stata (15 or later).
@@ -41,8 +41,9 @@ if "$PROJECT_ROOT" == "" {
 }
 
 local SIGMINE_RAW     "$RAW_DIR/SIGMINE"
-local SIGMINE_WORKING "$WORKING_DIR/SIGMINE"
+local SIGMINE_WORKING "$WORKING_DIR/Mines/SIGMINE"
 
+capture mkdir "$WORKING_DIR/Mines"
 capture mkdir "`SIGMINE_WORKING'"
 
 

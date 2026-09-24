@@ -14,15 +14,19 @@ Python. Do these in order:
    side by side.
 2. Clone the repo *into* that folder (so you end up with, e.g.,
    `<your project root>\Code`).
-3. Open `Code\config.do` and paste two paths at the top: `PROJECT_ROOT` (the
-   project root folder from step 1) and `REPO_PATH` (wherever the repo
+3. Open `Code\config.do` and paste three paths at the top: `PROJECT_ROOT` (the
+   project root folder from step 1), `REPO_PATH` (wherever the repo
    actually landed in step 2 — usually `<root>\Code`, but stated explicitly
-   rather than assumed).
+   rather than assumed), and `LARGE_DATA_ROOT` (a folder with a lot of free
+   space, for raw data too big to keep inside `PROJECT_ROOT` — RAIS is the
+   reason this exists. Doesn't have to be an external drive; can even equal
+   `PROJECT_ROOT` if you don't need the distinction).
 4. Run `config.do` once at the start of each Stata session, before running
-   any other do-file. It sets `PROJECT_ROOT` for Stata, writes `config.py` so
-   Python scripts (like `pull_sigmine.py`) pick up the same path
-   automatically, and creates `Data`, `Results`, and `Working` under your
-   project root if they don't already exist.
+   any other do-file. It sets `PROJECT_ROOT` and `LARGE_DATA_ROOT` for Stata,
+   writes `config.py` so Python scripts (like `pull_sigmine.py`) pick up the
+   same paths automatically, and creates `Data`, `Results`, and `Working`
+   under your project root (plus `LARGE_DATA_ROOT` itself) if they don't
+   already exist.
 
 If a Python script fails saying it can't find `config.py`, this is the step
 you missed — run `config.do` in Stata first. There's no Python-only path

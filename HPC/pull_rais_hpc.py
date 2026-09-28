@@ -1,6 +1,6 @@
 """
-HPC version of pull_rais.py - downloads RAIS microdata directly on the
-HPC, instead of on a local machine + external drive. Downloads only -
+Downloads RAIS microdata directly on the HPC (the files are too big to
+handle on a laptop). Downloads only -
 decompression is turned off here on purpose, see the note in main()
 below. The .7z archives are small (a few GB per year even in the biggest
 years), but decompressed they can run 50GB+ per year, which doesn't fit
@@ -13,8 +13,8 @@ confirmed working already, this isn't hypothetical.
 
 Source: ftp://ftp.mtps.gov.br/pdet/microdados/RAIS/<year>/
 
-Same file-naming caveat as the local version - older years ship one .7z
-per state, newer years ship region-grouped files instead. This just grabs
+File naming changes over time - older years ship one .7z per state,
+newer years ship region-grouped files instead. This just grabs
 every .7z it finds rather than assuming either scheme.
 
 A few years (2004, 2005, confirmed - possibly others) ship the

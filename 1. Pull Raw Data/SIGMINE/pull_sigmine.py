@@ -10,10 +10,7 @@ Data folder.
 Source (browse it yourself here first if you want):
 https://dadosabertos.anm.gov.br/SIGMINE/PROCESSOS_MINERARIOS/
 
---------------------------------------------------------------------------
-A note on file paths: If you haven't set up config.py yet, see config_template.py for the (one
-line) setup step.
---------------------------------------------------------------------------
+Same config.py setup as the other scripts - run 0. Configure File Paths/config.do in Stata first.
 """
 
 import sys
@@ -21,9 +18,9 @@ import urllib.request
 import zipfile
 from pathlib import Path
 
-# config.py lives at the top of the repo: Code/1. Pull Raw Data/SIGMINE/
-# -> up two levels -> Code/. We add that folder to Python's search path so
-# "import config" below can find it no matter where this repo was cloned.
+# config.py lives in the repo's "0. Configure File Paths" folder (two levels
+# up from here, then into that folder). Adding it to Python's search path
+# lets "import config" find it no matter where this repo was cloned.
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT / "0. Configure File Paths"))
 
@@ -32,8 +29,7 @@ try:
 except ImportError:
     raise SystemExit(
         "Couldn't find config.py in Code/0. Configure File Paths.\n"
-        "Copy config_template.py to config.py and fill in your own "
-        "PROJECT_ROOT path - instructions are inside that file."
+        "Run 0. Configure File Paths/config.do in Stata first (once per session) - see the README."
     )
 
 if not Path(config.PROJECT_ROOT).is_dir():

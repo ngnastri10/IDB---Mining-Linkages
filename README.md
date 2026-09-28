@@ -28,7 +28,7 @@ The code builds one analysis file: a **municipality × industry (CNAE67) × year
 **Steps:**
 
 1. **Make the project folder** (any name, anywhere) and **clone this repo into it.**
-2. **In [`0. Configure File Paths/config.do`](0.%20Configure%20File%20Paths/config.do):** set `REPO_PATH` to your **repo folder**. The code works out the project folder from it. That's the only required setting. Two optional ones sit right below it:
+2. **In [`0. Configure File Paths/config.do`](0.%20Configure%20File%20Paths/config.do):** set `REPO_PATH` to your **repo folder**. The code works out the project folder from it. Two optional settings sit right below it:
    - **If short on disk space:** set `LARGE_DATA_ROOT` to another drive for the multi-GB files. Otherwise leave it blank and they go in `Large Data` inside your project folder.
    - **If on a Mac:** change `PYTHON` to `python3`.
 3. **In [`master.do`](master.do):** set `repo_folder` at the top to the same **repo folder**. It needs it to find `config.do`.

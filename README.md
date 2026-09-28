@@ -30,7 +30,7 @@ The code builds one analysis file: a **municipality × industry (CNAE67) × year
 1. **Make the project folder** (any name, anywhere) and **clone this repo into it.**
 2. **In [`0. Configure File Paths/config.do`](<0.%20Configure%20File%20Paths/config.do>):** set `REPO_PATH` to your **repo folder**. Optional:
    - **If short on disk space:** set `LARGE_DATA_ROOT` to another drive. Otherwise leave it blank.
-   - **If on a Mac:** change `PYTHON` to `python3`.
+   - **If Python won't start:** type `python search` in Stata and paste one of the paths it lists into `PYTHON_EXE` in `config.do`.
 3. **In [`master.do`](master.do):** set `repo_folder` at the top to the same **repo folder**.
 4. **Put the RAIS files in place.** See [RAIS and the HPC](#rais-and-the-hpc).
 5. **Run `master.do`.**

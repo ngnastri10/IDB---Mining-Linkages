@@ -1,13 +1,11 @@
 """
 Check that every package in requirements.txt can be imported, install any
-that can't (pip install --user), and check again.
+that can't (pip install --user), and check again. Stops with an error if
+anything is still missing.
 
-config.do runs this for you. You can also run it yourself:
+config.do runs this for you (through run_python.do). You can also run it
+yourself in a terminal:
     python check_python_packages.py
-
-If you pass a file path, that file gets written only when everything is
-installed - that's how config.do finds out whether it worked, since Stata
-can't see a Python script's exit status.
 """
 
 import importlib
@@ -40,25 +38,36 @@ def missing_packages(names):
     return missing
 
 
+def python_exe():
+    """The python executable to run pip with. Inside Stata, sys.executable
+    can point to Stata itself, so fall back to the Python install folder."""
+    exe = Path(sys.executable)
+    if "python" in exe.name.lower():
+        return str(exe)
+    base = Path(sys.exec_prefix)
+    for candidate in [base / "python.exe", base / "bin" / "python3", base / "bin" / "python"]:
+        if candidate.exists():
+            return str(candidate)
+    return "python"
+
+
 def main():
-    print(f"Checking Python packages with: {sys.executable}")
+    python = python_exe()
+    print(f"Checking Python packages with: {python}")
     names = read_requirements()
     missing = missing_packages(names)
 
     if missing:
         print(f"Missing: {', '.join(missing)} - installing...")
-        subprocess.call([sys.executable, "-m", "pip", "install", "--user", *missing])
+        subprocess.call([python, "-m", "pip", "install", "--user", *missing])
         importlib.invalidate_caches()
         missing = missing_packages(missing)
 
     if missing:
-        print(f"Still missing after trying to install: {', '.join(missing)}")
-        print(f"Try by hand: {sys.executable} -m pip install {' '.join(missing)}")
-        sys.exit(1)
+        sys.exit(f"Still missing after trying to install: {', '.join(missing)}. "
+                 f"Try by hand: {python} -m pip install {' '.join(missing)}")
 
     print("All packages there.")
-    if len(sys.argv) > 1:
-        Path(sys.argv[1]).write_text("ok\n")
 
 
 if __name__ == "__main__":

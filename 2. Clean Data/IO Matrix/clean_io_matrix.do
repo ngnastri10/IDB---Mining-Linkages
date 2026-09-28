@@ -104,24 +104,8 @@ if !`need_reshape' {
 }
 
 if `need_reshape' {
-    * "python", not "python3" - confirmed directly on Windows "python3"
-    * resolves to the Microsoft Store stub, not the real install, and
-    * fails silently rather than raising a visible error.
-    shell $PYTHON "$REPO_PATH/2. Clean Data/IO Matrix/reshape_io_matrix.py" "$IOMATRIX_RAW/Matriz_de_Insumo_Produto_2015_Nivel_67.xls" "$IOMATRIX_RAW/tab10_2.xls" "$IOMATRIX_RAW/io_matrix_67_2015_long.csv" "$IOMATRIX_RAW/io_matrix_activity_totals_2015.csv"
-
-    * shell doesn't check whether the script it ran actually succeeded -
-    * confirm both files are really there now rather than let a failed
-    * reshape cascade into a confusing import error below.
-    capture confirm file "$IOMATRIX_RAW/io_matrix_67_2015_long.csv"
-    if _rc {
-        di as error "reshape_io_matrix.py did not produce the long-format file - run it directly (not through Stata) to see the real error."
-        exit 601
-    }
-    capture confirm file "$IOMATRIX_RAW/io_matrix_activity_totals_2015.csv"
-    if _rc {
-        di as error "reshape_io_matrix.py did not produce the industry totals file - run it directly (not through Stata) to see the real error."
-        exit 601
-    }
+    * Runs inside Stata - stops here with the Python error if it fails.
+    do "$CONFIG_DIR/run_python.do" "2. Clean Data/IO Matrix/reshape_io_matrix.py" "$IOMATRIX_RAW/Matriz_de_Insumo_Produto_2015_Nivel_67.xls" "$IOMATRIX_RAW/tab10_2.xls" "$IOMATRIX_RAW/io_matrix_67_2015_long.csv" "$IOMATRIX_RAW/io_matrix_activity_totals_2015.csv"
 }
 
 ********************************************************************************

@@ -58,15 +58,8 @@ capture mkdir "$SCM_WORKING"
 
 capture confirm file "$SCM_RAW/scm_process_milestones.csv"
 if _rc {
-    * "python", not "python3" - on Windows "python3" resolves to the
-    * Microsoft Store stub, not the real install.
-    shell $PYTHON "$REPO_PATH/2. Clean Data/SCM/reshape_scm.py" "$SCM_RAW/microdados" "$SCM_RAW/scm_process_milestones.csv"
-
-    capture confirm file "$SCM_RAW/scm_process_milestones.csv"
-    if _rc {
-        di as error "reshape_scm.py did not produce the CSV - run it directly (not through Stata) to see the real error."
-        exit 601
-    }
+    * Runs inside Stata - stops here with the Python error if it fails.
+    do "$CONFIG_DIR/run_python.do" "2. Clean Data/SCM/reshape_scm.py" "$SCM_RAW/microdados" "$SCM_RAW/scm_process_milestones.csv"
 }
 
 ********************************************************************************

@@ -38,10 +38,11 @@ global REPO_PATH "C:\Users\ngnas\OneDrive\Desktop\PhD Documents\Publications\IDB
 * space and want them on another drive (e.g. "D:\Data").
 global LARGE_DATA_ROOT "D:\Data"
 
-******** 3. MAC USERS: change this to "python3" ********
-* The command that runs Python. On Windows keep "python" - "python3" there
-* can point to a Microsoft Store stub that fails silently.
-global PYTHON "python"
+******** 3. ONLY IF PYTHON WON'T START (optional) ********
+* Python scripts run inside Stata, and Stata picks a Python on its own. If
+* that one won't start (common with Anaconda), type "python search" in
+* Stata and paste one of the paths it lists here.
+global PYTHON_EXE "C:\Users\ngnas\AppData\Local\Programs\Python\Python311\python.exe"
 
 *** Nothing below here needs changing. ***
 
@@ -86,7 +87,7 @@ global WORKING_DIR "$PROJECT_ROOT/Working"
 ********************************************************************************
 **********															 ***********
 ********** Section 2: Write config.py, so Python scripts see the same **********
-**********			 paths (no Stata Python integration needed)		 ***********
+**********			 paths											 ***********
 ********************************************************************************
 ********************************************************************************
 
@@ -144,32 +145,27 @@ foreach pkg of local stata_packages {
 
 /* Notes:
 
-	check_python_packages.py tries to import everything in
-	requirements.txt, installs whatever's missing (pip install --user),
-	and checks again. If anything is still missing it prints what, and
-	which Python it checked - that matters, since "$PYTHON" might not be
-	the same Python you use in VS Code or Anaconda.
-
-	shell doesn't tell Stata whether a Python script worked, so the script
-	only writes the "ok" file when everything imports - no file means
-	something's still missing.
+	Python scripts run inside Stata (Stata 16+). Step 1 makes sure Stata
+	can find Python; step 2 runs check_python_packages.py, which imports
+	everything in requirements.txt, installs whatever's missing
+	(pip install --user) and stops with an error if anything is still
+	missing.
 
 */
 
-local python_ok "$CONFIG_DIR/python_packages_ok.txt"
-capture erase "`python_ok'"
+* 1. Point Stata at Python, if a path was given. This only works before
+* Python has started in this Stata session, hence the capture.
+if "$PYTHON_EXE" != "" {
+	capture python set exec "$PYTHON_EXE"
+}
 
-shell $PYTHON "$CONFIG_DIR/check_python_packages.py" "`python_ok'"
-
-capture confirm file "`python_ok'"
+capture python: import sys
 if _rc {
-	di as error "Some Python packages are missing, or Python itself couldn't be found (PYTHON = $PYTHON)."
-	di as error "Run this in a terminal to see what's wrong:"
-	di as error `"    $PYTHON "$CONFIG_DIR/check_python_packages.py""'
-	di as error "Or install everything by hand:"
-	di as error `"    $PYTHON -m pip install -r "$CONFIG_DIR/requirements.txt""'
+	di as error "Python won't start in Stata."
+	di as error "Type 'python search' in Stata, then paste one of the paths it lists"
+	di as error "into PYTHON_EXE at the top of config.do (and restart Stata)."
 	exit 601
 }
 
-erase "`python_ok'"
-di as result "Python packages all there."
+* 2. Check (and install) the packages.
+do "$CONFIG_DIR/run_python.do" "0. Configure File Paths/check_python_packages.py"

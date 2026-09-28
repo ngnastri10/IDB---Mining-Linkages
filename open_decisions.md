@@ -6,17 +6,17 @@ Running list of choices we made. Update this as items get resolved.
 
 | # | Question | Options | Notes |
 |---|---|---|---|
-| 1 | Add phosphate, potash and coal to the priced minerals? | 1. Add all three<br>2. Add phosphate and potash only<br>3. Keep excluded (current) | All have World Bank prices. Royalties: phosphate ~R$860M (bigger than zinc + tin + nickel), potash ~R$258M, coal ~R$258M. Not metals; coal overlaps CNAE 580. Adding means edits to `build_price_groups.do`, `clean_wb_prices.do`, `build_price_shock.py`. |
+| 1 | Add phosphate, potash and coal to the priced minerals? | 1. Add all three<br>2. Add phosphate and potash only<br>3. Keep excluded (current) | All have World Bank prices, but aren't metals. Coal overlaps CNAE 580. |
 | 2 | Count bauxitic clay (ARGILA BAUXITICA) as aluminum? | 1. Yes<br>2. No (current) | One Nova Lima right paid ~R$1B. |
-| 3 | What to do with denied/withdrawn concession requests? | 1. Keep as controls (current)<br>2. Drop from the pipeline | Codes 390/2139 (denied), 351/352 (withdrawn). Now they look "pending" forever. Keeping them says a request still signals mineral potential. **Can change the control group.** Count them first by re-running `pull_scm.py`. |
-| 4 | Count other ways a concession gets granted? | 1. Yes, add the codes<br>2. No (current) | Codes 507/2142 (split off), 1785/2618 (researched areas), 488/2729 (absorbs another title). Without a request date these rights never enter the pipeline. Probably few. |
-| 5 | Price shock: which **share**? | 1. Town's own 2007 jobs in 791 + 792 (current)<br>2. Distance-based share (mining jobs ÷ all jobs within X km)<br>3. Royalties per capita within X km<br>4. Mining output ÷ municipal GDP<br>5. No share: `n_mines` × price index<br>6. × IO linkage (varies by industry) | Current share is > 0 in only 228 municipalities, so only 63 towns get a shock at 25 km. Option 2 is preferred so far. Option 4 needs IBGE municipal GDP and a pre-2017 base. |
-| 6 | Price shock: which **weights**? | 1. 2003–06 royalty shares of nearby priced mines (current)<br>2. Minerals of nearby pipeline rights<br>3. SIGMINE area by mineral<br>4. SGB geology<br>5. ANM production data | With option 1, towns whose first mine opens after 2007 get no weights, so the shock and the DiD cover different towns; 2003–06 CFEM is also shaky. Option 4 is the most exogenous (not pulled). |
+| 3 | What to do with denied/withdrawn concession requests? | 1. Keep as controls (current)<br>2. Drop from the pipeline | Now they look "pending" forever. **Can change the control group.** Count them first. |
+| 4 | Count other ways a concession gets granted? | 1. Yes, add the codes<br>2. No (current) | E.g. a concession split off from another. Probably few. |
+| 5 | Price shock: which **share**? | 1. Town's own 2007 jobs in 791 + 792 (current)<br>2. Distance-based share (mining jobs ÷ all jobs within X km)<br>3. Royalties per capita within X km<br>4. Mining output ÷ municipal GDP<br>5. No share: `n_mines` × price index<br>6. × IO linkage (varies by industry) | Current share gives only 63 towns a shock at 25 km. Option 2 preferred so far. |
+| 6 | Price shock: which **weights**? | 1. 2003–06 royalty shares of nearby priced mines (current)<br>2. Minerals of nearby pipeline rights<br>3. SIGMINE area by mineral<br>4. SGB geology<br>5. ANM production data | Option 1 gives no weights to towns whose first mine opens after 2007. Option 4 is the most exogenous. |
 | 7 | Price shock: which **mines** count? | 1. Same distance bands as treatment (current)<br>2. Only mines inside the municipality | |
 | 8 | Price shock: which **prices**? | 1. Log USD vs 2007, yearly average (current)<br>2. Convert to BRL<br>3. Deflate<br>4. Use changes | Option 2 needs an exchange-rate pull. |
-| 9 | Minimum mine size? | 1. Keep all (current)<br>2. Minimum royalties (e.g. R$100k)<br>3. Only rights with a real location | 19% of royalty-paying rights sit at a town seat, mostly tiny (median R$3.7k). |
+| 9 | Minimum mine size? | 1. Keep all (current)<br>2. Minimum royalties (e.g. R$100k)<br>3. Only rights with a real location | 19% of mines sit at a town seat, mostly tiny. |
 | 10 | Stricter opening definition? | 1. First payment (current)<br>2. Require sustained payments<br>3. For event studies, require 2+ pre-years (openings 2009+) | Small operations pay on and off. |
-| 11 | Local concentration (HHI): across what? | 1. Across industries<br>2. Across firms within an industry | Option 1 works with the current data; option 2 needs establishment-level data. |
+| 11 | Local concentration (HHI): across what? | 1. Across industries<br>2. Across firms within an industry | Option 2 needs establishment-level data. |
 
 ## To do
 

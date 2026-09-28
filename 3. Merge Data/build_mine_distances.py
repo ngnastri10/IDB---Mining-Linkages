@@ -35,25 +35,21 @@ Two versions get written, so you can toggle between them:
             platinum). Drops sand pits, clay, gravel, stone, water, etc.
   _all    - every mine
 
-Each mining right's mineral comes from its main CFEM royalty substance if
-it ever paid royalties; otherwise (pipeline rights that never produced)
-from the substances listed for it in the registry. The name -> price group
-mapping is in Data/Crosswalks/substance_to_price_group.csv - edit it there.
+Each mining right's price group comes from build_price_groups.do (run it
+first) - the list of which minerals count as priced lives there.
 
 Runs on plain numpy (no GIS packages). Distances use the haversine formula.
 
 Inputs:
-  Data/Crosswalks/municipality_latlon.csv
-  Data/Crosswalks/substance_to_price_group.csv
+  Data/Crosswalks/municipality_latlon.csv (from pull_crosswalks.py)
   Working/Mines/mine_locations.dta
   Working/Mines/mine_timeline.dta
   Working/Mines/mine_pipeline.dta
-  LARGE_DATA_ROOT/SCM/microdados/ProcessoSubstancia.txt
+  Working/Mines/mine_price_group.dta (from build_price_groups.do)
 
 Outputs:
   Working/Mines/municipality_year_mining_priced.dta
   Working/Mines/municipality_year_mining_all.dta
-  Working/Mines/mine_price_group.dta (each mining right's price group)
 
 Same config.py setup as the other scripts - run config.do in Stata first.
 """
@@ -159,35 +155,6 @@ def col(df, name):
     return df[name].to_numpy(dtype=float)
 
 
-def price_groups(timeline):
-    """Each mining right's price group (iron, gold, ...) or blank if unpriced.
-
-    Rights that paid royalties: their main CFEM substance. Rights that never
-    did: any priced substance listed for them in the registry.
-    """
-    crosswalk = pd.read_csv(CROSSWALKS / "substance_to_price_group.csv", dtype=str)
-    cfem_map = crosswalk[crosswalk.source == "cfem"].set_index("substance").price_group
-    reg_map = crosswalk[crosswalk.source == "registry"].set_index("substance_id").price_group
-
-    producing = timeline[KEYS].copy()
-    producing["price_group"] = timeline.main_substance.map(cfem_map)
-
-    reg = pd.read_csv(Path(config.LARGE_DATA_ROOT) / "SCM" / "microdados" / "ProcessoSubstancia.txt",
-                      sep=";", encoding="latin-1", dtype=str, usecols=["DSProcesso", "IDSubstancia"])
-    reg["price_group"] = reg.IDSubstancia.map(reg_map)
-    reg = reg.dropna(subset=["price_group"]).drop_duplicates("DSProcesso")
-    # Registry IDs look like "930.641/1989".
-    reg["process_number"] = reg.DSProcesso.str.split("/").str[0].str.replace(".", "", regex=False).astype("int64")
-    reg["process_year"] = reg.DSProcesso.str.split("/").str[1].str[:4].astype("int64")
-    reg = reg[KEYS + ["price_group"]]
-
-    # Producing rights keep their CFEM answer (even if blank); only rights
-    # that never paid royalties fall back to the registry.
-    reg = reg.merge(producing[KEYS], on=KEYS, how="left", indicator=True)
-    reg = reg[reg._merge == "left_only"].drop(columns="_merge")
-    return pd.concat([producing, reg], ignore_index=True)
-
-
 def build_panel(pairs, timeline, pipeline, seats):
     """Sede x year treatment variables from a set of sede-mine pairs."""
     n_seats = len(seats)
@@ -276,7 +243,7 @@ def main():
     loc = fix_keys(loc).reset_index(drop=True)
 
     timeline = fix_keys(pd.read_stata(MINES / "mine_timeline.dta")[
-        KEYS + ["first_year", "last_year", "opened_year", "closed_year", "main_substance"]])
+        KEYS + ["first_year", "last_year", "opened_year", "closed_year"]])
     pipeline = fix_keys(pd.read_stata(MINES / "mine_pipeline.dta", convert_categoricals=False)[
         KEYS + ["pipeline_start_year", "granted_year", "pipeline_end_year", "ever_opened"]])
 
@@ -290,11 +257,10 @@ def main():
     pairs = pd.concat([pairs, loc.loc[m_idx, KEYS].reset_index(drop=True)], axis=1)
     print(f"Sede-mine pairs within {MAX_KM} km: {len(pairs):,}")
 
-    # Price group per mining right - saved for the price index later.
-    groups = price_groups(timeline)
-    groups.to_stata(MINES / "mine_price_group.dta", write_index=False, version=118,
-                    variable_labels={"price_group": "Priced mineral group (blank = no world price)"})
-    priced = groups.dropna(subset=["price_group"])
+    # Price group per mining right, from build_price_groups.do. Stata saves
+    # a blank price group as an empty string, not missing.
+    groups = fix_keys(pd.read_stata(MINES / "mine_price_group.dta", columns=KEYS + ["price_group"]))
+    priced = groups[groups.price_group.fillna("") != ""]
     print(f"Mining rights with a priced mineral: {len(priced):,} "
           f"({priced.price_group.value_counts().to_dict()})")
 

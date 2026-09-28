@@ -19,9 +19,9 @@ weights: price_index is missing and shock is 0 (no exposure).
 First-pass defaults - see Code/open_decisions.md for the alternatives.
 
 Inputs:
-  Data/Crosswalks/municipality_latlon.csv
+  Data/Crosswalks/municipality_latlon.csv (from pull_crosswalks.py)
   Working/Mines/CFEM/cfem_process_month.dta
-  Working/Mines/mine_price_group.dta
+  Working/Mines/mine_price_group.dta (from build_price_groups.do)
   Working/Mines/mine_locations.dta
   Working/WB Prices/wb_commodity_prices_monthly.dta
   LARGE_DATA_ROOT/RAIS/Working/CNAE67/cleaned_all_years.dta
@@ -66,7 +66,9 @@ def main():
     cfem = cfem[cfem.year.between(*BASE_YEARS)]
     base = fix_keys(cfem.groupby(KEYS, as_index=False).royalty_value.sum())
 
-    groups = fix_keys(pd.read_stata(MINES / "mine_price_group.dta")).dropna(subset=["price_group"])
+    groups = fix_keys(pd.read_stata(MINES / "mine_price_group.dta"))
+    # Stata stores a blank mineral as an empty string, not missing.
+    groups = groups[groups.price_group.fillna("") != ""]
     loc = fix_keys(pd.read_stata(MINES / "mine_locations.dta")[KEYS + ["lat", "lon"]].dropna())
     base = base.merge(groups, on=KEYS).merge(loc, on=KEYS)
     print(f"Priced mines paying royalties {BASE_YEARS[0]}-{BASE_YEARS[1]}: {len(base):,}")

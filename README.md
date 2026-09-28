@@ -2,29 +2,31 @@
 
 Code for the IDB project on mining in Brazil and its links to local economies: when a mine opens near a town, what happens to local employment, wages and industries, especially industries that buy from or sell to mining?
 
-The code builds one analysis file: a **municipality × industry (CNAE67) × year panel, 2007–2025**. It combines RAIS employment data with:
-- mine openings and distance-based treatment groups (from CFEM royalties, SIGMINE locations and the ANM registry)
-- each industry's input-output links to mining
-- a shift-share mineral price shock
-- royalties, Pix payments and world metal prices
+The code builds one analysis file: a **municipality × industry (CNAE67) × year panel, 2007–2025**, with three kinds of variables:
 
-It also makes the project maps.
+| | What | Data |
+|---|---|---|
+| **Outcomes** | Local labor markets: jobs, wages, worker composition, establishments, Pix payment activity | RAIS, Central Bank (Pix) |
+| **Treatment: extensive margin** | Where and when mines open, within 10/25/50/100 km of each town: treated (a mine opened nearby) vs. control (a mining concession nearby, but no mine ever opened) | CFEM royalties, SIGMINE locations, ANM registry |
+| **Treatment: intensive margin** | A shift-share mineral price shock: world metal prices, weighted by the local mix of minerals and the municipality's mining employment share | World Bank prices, CFEM, RAIS |
+| **Mechanisms** | How tied each industry is to mining (input-output linkages). Local concentration is still to build. | IBGE input-output matrix |
 
-**What every variable means:** see [variable_dictionary.md](variable_dictionary.md).
-**Choices we made, and ones still open:** see [open_decisions.md](open_decisions.md).
+- **What every variable means:** [variable_dictionary.md](variable_dictionary.md)
+- **Choices we made, and ones still open:** [open_decisions.md](open_decisions.md)
 
 ---
 
 ## Quick start
 
-1. **Make a project folder** and clone this repo into it, so you have `<project folder>\Code`.
-2. **Paste your paths** into [`0. Configure File Paths/config.do`](0.%20Configure%20File%20Paths/config.do):
-   - `PROJECT_ROOT`: your project folder
-   - `REPO_PATH`: the `Code` folder
-   - `LARGE_DATA_ROOT`: where big files go. If you have the space, a `Large Data` folder inside your project folder is tidiest. It can be an external drive.
-   - `PYTHON`: the command that runs Python. `python` on Windows, usually `python3` on Mac.
+1. **Make a project folder** (any name, anywhere) and clone the repo into it **as a folder called `Code`**. From inside the project folder, run:
+   ```
+   git clone https://github.com/ngnastri10/IDB---Mining-Linkages.git Code
+   ```
+2. **Tell the code where your project folder is.** In [`0. Configure File Paths/config.do`](0.%20Configure%20File%20Paths/config.do), paste its path into `PROJECT_ROOT`. That's the only required setting. Two optional ones sit right below it:
+   - **Short on disk space?** Set `LARGE_DATA_ROOT` to another drive for the multi-GB files. Otherwise leave it blank and they go in `Large Data` inside your project folder.
+   - **On a Mac?** Change `PYTHON` to `python3`.
 3. **Put the RAIS files you were sent in place.** See [RAIS and the HPC](#rais-and-the-hpc).
-4. **Open [`master.do`](master.do)**, paste the Code folder path at the top, and run it.
+4. **Open [`master.do`](master.do)**, paste the same project folder path at the top, and run it.
 
 `master.do` runs everything in order: configure → pull → clean → build and merge → maps. Each stage has an on/off switch at the top. If you're working from the data snapshot you were sent, set `run_pull` to 0 (see [Data vintage](#data-vintage)).
 
@@ -51,7 +53,7 @@ You need **Stata** (built on Stata 16) and **Python 3**. The config step checks 
 | `Data/` | Raw downloads, untouched |
 | `Working/` | Intermediate files built by the code |
 | `Results/` | Figures, plus `master_log.txt` from the last full run |
-| `LARGE_DATA_ROOT` | RAIS files, the ANM registry microdata, map shapefiles, and the final panel (`Merged/municipality_cnae67_year.dta`, about 4.6 GB) |
+| `Large Data/` (or wherever you pointed `LARGE_DATA_ROOT`) | RAIS files, the ANM registry microdata, map shapefiles, and the final panel (`Merged/municipality_cnae67_year.dta`, about 4.6 GB) |
 
 ## RAIS and the HPC
 

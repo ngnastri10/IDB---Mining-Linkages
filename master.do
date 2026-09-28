@@ -1,17 +1,16 @@
 * ==========================================================================
 * Master file: runs the whole project, start to finish, in order.
 *
-* Before the first run, paste your paths into
-* "0. Configure File Paths/config.do" (and see the README).
-*
-* Then set REPO_PATH just below to the same Code folder and run this file.
+* Before the first run, paste your project folder into
+* "0. Configure File Paths/config.do" (see the README), and paste the
+* same project folder just below. Then run this file.
 *
 * The switches in Section 1 turn each stage on or off, so you can re-run
 * just part of the pipeline. Stages have to run in order the first time -
 * each one uses what the stage before it saved.
 *
 * RAIS is the one thing this does NOT build: it's cleaned on the HPC (see
-* the HPC folder, for reference only). Section 4 checks the RAIS files
+* the HPC folder, for reference only). Section 5 checks the RAIS files
 * are where they should be and stops with a clear message if not.
 *
 * File Organization:
@@ -35,8 +34,9 @@ set more off
 ********************************************************************************
 ********************************************************************************
 
-******** PASTE THE PATH TO THE CODE FOLDER (same as REPO_PATH in config.do) ********
-local code_folder "C:\Users\ngnas\OneDrive\Desktop\PhD Documents\Publications\IDB - Mining\Code"
+******** PASTE YOUR PROJECT FOLDER (same as PROJECT_ROOT in config.do) ********
+* Needed here too, just so this file can find config.do.
+local project_folder "C:\Users\ngnas\OneDrive\Desktop\PhD Documents\Publications\IDB - Mining"
 
 * 1 = run this stage, 0 = skip it.
 *
@@ -58,7 +58,7 @@ local run_results 1
 
 * Sets the path globals, writes config.py for the Python scripts, and
 * checks/installs Stata and Python packages. Always runs.
-do "`code_folder'/0. Configure File Paths/config.do"
+do "`project_folder'/Code/0. Configure File Paths/config.do"
 
 * A log of the whole run, so you can scroll back through it afterwards.
 capture log close master

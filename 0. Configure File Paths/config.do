@@ -1,17 +1,17 @@
 * ==========================================================================
-* Shared config - paste your paths below and everything else follows from
-* them.
+* Shared config - paste your project folder below and everything else
+* follows from it.
 *
 * Run this once per Stata session before running any other do-file in the
 * repo (master.do runs it for you).
 *
-* Heads up: this file is tracked in git. Paste your own paths, but don't
-* commit your version - otherwise everyone else gets your paths when they
+* Heads up: this file is tracked in git. Paste your own path, but don't
+* commit your version - otherwise everyone else gets your path when they
 * pull.
 *
 * File Organization:
 *
-*		Section 1: Set globals from your pasted paths
+*		Section 1: Set globals from your pasted path
 *		Section 2: Write config.py, so Python scripts see the same paths
 *		Section 3: Create the Data/Results/Working folders
 *		Section 4: Check Stata packages
@@ -21,28 +21,43 @@
 ********************************************************************************
 ********************************************************************************
 **********															 ***********
-********** Section 1: Set globals from your pasted paths              ***********
+********** Section 1: Set globals from your pasted path               ***********
 **********															 ***********
 ********************************************************************************
 ********************************************************************************
 
-* PROJECT_ROOT: the project folder you made to hold all files.
-* REPO_PATH: wherever you cloned this repo into.
-* LARGE_DATA_ROOT: a folder with a lot of free space, for raw data too big
-* to reasonably keep inside PROJECT_ROOT (e.g. RAIS). Doesn't have to be
-* an external drive - anywhere with room works. If you have the space,
-* a "Large Data" folder inside PROJECT_ROOT is the tidiest option.
-* PYTHON: the command that runs Python on your computer. Usually "python"
-* on Windows - not "python3", which on Windows can point to a Microsoft
-* Store stub that fails silently. On Mac/Linux it's usually "python3".
-
-* Note: REPO_PATH should be inside of PROJECT_ROOT
-
-******** PASTE YOUR PATHS IN QUOTES BELOW ********
+******** 1. PASTE YOUR PROJECT FOLDER HERE (required) ********
+* The folder that holds everything - the repo sits inside it as "Code".
 global PROJECT_ROOT "C:\Users\ngnas\OneDrive\Desktop\PhD Documents\Publications\IDB - Mining"
-global REPO_PATH "C:\Users\ngnas\OneDrive\Desktop\PhD Documents\Publications\IDB - Mining\Code"
+
+******** 2. BIG FILES SOMEWHERE ELSE? (optional) ********
+* RAIS, the registry microdata, map shapefiles and the final panel are
+* big (several GB). Leave this as "" to keep them in a "Large Data"
+* folder inside your project folder. Only set it if you're short on
+* space and want them on another drive (e.g. "D:\Data").
 global LARGE_DATA_ROOT "D:\Data"
+
+******** 3. MAC USERS: change this to "python3" ********
+* The command that runs Python. On Windows keep "python" - "python3" there
+* can point to a Microsoft Store stub that fails silently.
 global PYTHON "python"
+
+*** Nothing below here needs changing. ***
+
+* The repo (Code folder) and the big-files default follow from the above.
+global REPO_PATH "$PROJECT_ROOT/Code"
+if "$LARGE_DATA_ROOT" == "" {
+	global LARGE_DATA_ROOT "$PROJECT_ROOT/Large Data"
+}
+
+* Catch the most likely setup mistake early: the repo not being in a
+* folder called Code inside the project folder.
+capture confirm file "$REPO_PATH/master.do"
+if _rc {
+	di as error "Can't find the code at $REPO_PATH"
+	di as error "The repo needs to sit inside your project folder, in a folder called Code."
+	exit 601
+}
 
 * This folder - config.py, requirements.txt and the package checker live here.
 global CONFIG_DIR "$REPO_PATH/0. Configure File Paths"

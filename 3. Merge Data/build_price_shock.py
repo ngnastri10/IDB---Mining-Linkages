@@ -66,7 +66,7 @@ def main():
     cfem = cfem[cfem.year.between(*BASE_YEARS)]
     base = fix_keys(cfem.groupby(KEYS, as_index=False).royalty_value.sum())
 
-    groups = fix_keys(pd.read_stata(MINES / "mine_price_group.dta"))
+    groups = fix_keys(pd.read_stata(MINES / "mine_price_group.dta", columns=KEYS + ["price_group"]))
     # Stata stores a blank mineral as an empty string, not missing.
     groups = groups[groups.price_group.fillna("") != ""]
     loc = fix_keys(pd.read_stata(MINES / "mine_locations.dta")[KEYS + ["lat", "lon"]].dropna())

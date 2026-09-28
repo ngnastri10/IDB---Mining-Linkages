@@ -99,7 +99,7 @@ def load_data():
     seats = gpd.GeoDataFrame(seats, geometry=gpd.points_from_xy(seats.seat_lon, seats.seat_lat), crs="EPSG:4674")
 
     loc = fix_keys(pd.read_stata(MINES / "mine_locations.dta")[KEYS + ["lat", "lon", "royalty_total"]].dropna(subset=["lat", "lon"]))
-    priced = fix_keys(pd.read_stata(MINES / "mine_price_group.dta"))
+    priced = fix_keys(pd.read_stata(MINES / "mine_price_group.dta", columns=KEYS + ["price_group"]))
     # Stata stores a blank mineral as an empty string, not missing.
     priced = priced[priced.price_group.fillna("") != ""]
     timeline = fix_keys(pd.read_stata(MINES / "mine_timeline.dta")[KEYS + ["first_year"]])
@@ -432,7 +432,7 @@ def map_priced_vs_all(states):
     # covers by count, but how much of the value.
     loc = fix_keys(pd.read_stata(MINES / "mine_locations.dta")[KEYS + ["lat", "lon", "royalty_total"]].dropna(subset=["lat", "lon"]))
     produced = fix_keys(pd.read_stata(MINES / "mine_timeline.dta")[KEYS])
-    groups = fix_keys(pd.read_stata(MINES / "mine_price_group.dta"))
+    groups = fix_keys(pd.read_stata(MINES / "mine_price_group.dta", columns=KEYS + ["price_group"]))
     groups = groups[groups.price_group.fillna("") != ""]
 
     mines = loc.merge(produced, on=KEYS).merge(groups, on=KEYS, how="left")

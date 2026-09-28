@@ -107,6 +107,17 @@ Running list of choices we made "for now" and gaps we left on purpose. Update th
 - RAIS Estab: merge once pulled. The draft assumes `D:\Data\RAIS\Working\Estab\CNAE67\cleaned_all_years.dta`.
 - Check that every RAIS cnae67 code matches the IO Matrix (watch the public/private education/health split).
 
+## Final panel variables (found writing `variable_dictionary.md`, 2026-09-28)
+
+- **`population` is misnamed.** It counts job records in the cell during the year (active on Dec 31 or not), not people. Rename (e.g. `n_job_records`) in the HPC collapse or the merge.
+- **RAIS averages and shares cover every job record in the year**, not only jobs active on Dec 31. Decide whether to restrict to Dec 31 jobs. Check whether `wage_dec` is 0 for jobs that ended before December (that would pull the average down).
+- **`race` and `educ` are averages of category codes** (meaningless / rough ordinal). Drop them from the collapse or keep only the `race_*` / `educ_*` shares.
+- **`term_fired/resigned/retired` are shares of all job records**, not of separations. Fine if that's intended - otherwise divide by separations.
+- **`royalty_iron` matches the English substance names** "Iron"/"Iron ore" from `clean_cfem.do`. Switch to the Portuguese name or `price_group` so the translation can't affect it.
+- **Partial years:** Pix 2020 = Nov-Dec only. Check whether the last year of World Bank prices and CFEM is complete.
+- **Dataset labels are thin** ("(mean) x", `cnae67` unlabeled). Add real labels in the merge do-file so they match `variable_dictionary.md`.
+- `estab_total_noemployees` assumes the RAIS Negativa flag is coded 1 = yes - verify against the layout file.
+
 ## Mechanisms (not built yet)
 
 - **Pre-existing local concentration (HHI)** by municipality, base year, from RAIS. It's a mechanism alongside the IO linkages. Still to decide: concentration across industries (possible with the current muni x CNAE67 data) or across firms within an industry (needs establishment-level data).

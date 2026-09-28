@@ -1,6 +1,6 @@
 """
 Build the CNAE 2.0 -> CNAE67 (IBGE's 67-sector national-accounts
-activity classification) crosswalk used by clean_rais_scrap_hpc.do's
+activity classification) crosswalk used by clean_rais_hpc.do's
 cnae67 collapse.
 
 Downloads IBGE's own official crosswalk straight from their FTP server
@@ -16,7 +16,7 @@ codes appear twice in IBGE's raw file. This just keeps the first
 occurrence for those - doesn't affect mining or its linkages at all,
 only education/health get a default bucket assigned.
 
-Called from clean_rais_scrap_hpc.do only if the output file doesn't
+Called from clean_rais_hpc.do only if the output file doesn't
 already exist yet - safe to rerun any time regardless.
 
 Needs xlrd to read IBGE's old-style .xls file (pandas uses it

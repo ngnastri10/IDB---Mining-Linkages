@@ -1,7 +1,7 @@
 * ==========================================================================
-* HPC version of clean_rais_estab.do - unzips, cleans, and collapses RAIS
-* Estabelecimentos for every year in the range below, same overall shape
-* as clean_rais_scrap_hpc.do's Vinculos pipeline (self-extracting,
+* Unzips, cleans, and collapses RAIS Estabelecimentos (the establishments
+* file) for every year in the range below, same overall shape
+* as clean_rais_hpc.do's Vinculos pipeline (self-extracting,
 * year loop, resume mode, builds up an All_Years file per output type)
 * but simpler - Estabelecimentos is one single national file per year,
 * not split by state, so there's no per-state loop or "append all
@@ -15,7 +15,7 @@
 * merge is a plain 1:1 join. Every other variable gets an "estab_"
 * prefix so nothing collides once the two are merged.
 *
-* Same idea as clean_rais_hpc.do's three Vinculos outputs: sector here
+* Same idea as clean_rais_hpc.do's Vinculos outputs: sector here
 * means three different things depending on granularity, saved as three
 * separate files rather than one, since they cover different year ranges:
 *   - CNAE95: every year 2000-2025.
@@ -384,7 +384,7 @@ forvalues year = `startyear'/`endyear' {
 
 	/* Note:
 
-	Same reasoning as clean_rais_hpc.do's three Vinculos outputs: CNAE95
+	Same reasoning as clean_rais_hpc.do's Vinculos outputs: CNAE95
 	is grouped for every year, CNAE 2.0 Classe and CNAE 2.0 Subclasse
 	only for years they actually exist (both 2007+, confirmed they
 	arrive together in the header log) - built with the same

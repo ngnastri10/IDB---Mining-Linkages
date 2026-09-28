@@ -17,4 +17,4 @@ module load python312
 
 cd /home/nn3495a-hpc/IDB/Mining/Code
 
-/app/Stata18-MP/stata-se -b do /home/nn3495a-hpc/IDB/Mining/Code/clean_rais_scrap_hpc.do
+/app/Stata18-MP/stata-se -b do /home/nn3495a-hpc/IDB/Mining/Code/clean_rais_hpc.do

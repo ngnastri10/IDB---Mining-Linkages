@@ -107,7 +107,9 @@ Running list of choices we made "for now" and gaps we left on purpose. Update th
 - RAIS Estab: merge once pulled. The draft assumes `D:\Data\RAIS\Working\Estab\CNAE67\cleaned_all_years.dta`.
 - Check that every RAIS cnae67 code matches the IO Matrix (watch the public/private education/health split).
 
-## Final panel variables (found writing `variable_dictionary.md`, 2026-09-28)
+## TO DO: clean up final panel variables (found writing `variable_dictionary.md`, 2026-09-28)
+
+Once these are fixed, update the matching rows in `variable_dictionary.md`.
 
 - **`population` is misnamed.** It counts job records in the cell during the year (active on Dec 31 or not), not people. Rename (e.g. `n_job_records`) in the HPC collapse or the merge.
 - **RAIS averages and shares cover every job record in the year**, not only jobs active on Dec 31. Decide whether to restrict to Dec 31 jobs. Check whether `wage_dec` is 0 for jobs that ended before December (that would pull the average down).

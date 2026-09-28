@@ -6,8 +6,6 @@ Every variable in the final panel, `LARGE_DATA_ROOT/Merged/municipality_cnae67_y
 
 The first table is the snapshot. Click a family to jump to its full table, with one row per variable.
 
-Before using a variable, read [Things to watch out for](#things-to-watch-out-for) at the bottom. A few variables don't mean what their names suggest.
-
 ## Families at a glance
 
 | # | Family | Variables | What it is | Varies by | Source |
@@ -59,7 +57,7 @@ Industries are mapped from CNAE 2.0 to CNAE67 with IBGE's official translator (`
 | Variable | Meaning | Source | How it's built |
 |---|---|---|---|
 | `number_employed` | Jobs active on December 31 | RAIS workers | Sum of the "active on Dec 31" flag. 0 in filled-in cells. **This is the usual employment measure.** |
-| `population` | **Number of job records during the year**, active on Dec 31 or not. Not population. | RAIS workers | Sum of 1 per job record. 0 in filled-in cells. See [watch-outs](#things-to-watch-out-for). |
+| `population` | Number of job records during the year, active on Dec 31 or not | RAIS workers | Sum of 1 per job record. 0 in filled-in cells. |
 | `employed` | Share of the year's job records still active on December 31 | RAIS workers | Average of the 0/1 "active on Dec 31" flag. |
 
 ## 3. Wages and tenure
@@ -80,8 +78,8 @@ Shares are averages of 0/1 indicators, so each is a share of job records.
 | Variable | Meaning | Source | How it's built |
 |---|---|---|---|
 | `age` | Average age, in years | RAIS workers | Average of "Idade". |
-| `educ` | Average of the RAIS **education code** (1–11) | RAIS workers | Average of the category code. **Not years of schooling** - use the `educ_*` shares. |
-| `race` | Average of the RAIS **race code** | RAIS workers | Average of the category code. **Not meaningful** - use the `race_*` shares. |
+| `educ` | Average of the RAIS **education code** (1–11) | RAIS workers | Average of the category code. For shares, see `educ_*`. |
+| `race` | Average of the RAIS **race code** | RAIS workers | Average of the category code. For shares, see `race_*`. |
 | `share_male` | Share male | RAIS workers | Sex code 1 = male. |
 | `race_indigenous` | Share Indigenous | RAIS workers | Race code 1. Among records with a race code. |
 | `race_white` | Share white | RAIS workers | Race code 2. |
@@ -274,17 +272,3 @@ PF = individuals (pessoa física), PJ = businesses (pessoa jurídica).
 | `pix_n_receivers_pf` | Distinct individuals who received | Central Bank | Monthly average. |
 | `pix_n_receivers_pj` | Distinct businesses who received | Central Bank | Monthly average. |
 
----
-
-## Things to watch out for
-
-Found while writing this dictionary. They're not fixed yet; they're also logged in `open_decisions.md`.
-
-1. **`population` is not population.** It's the number of job records in the cell during the year, including jobs that ended before December. Consider renaming it (e.g. `n_job_records`).
-2. **RAIS averages and shares cover every job record in the year**, not just jobs active on December 31. So averages mix in people who left early. `wage_dec` may be pulled down if jobs that ended before December report 0 for December pay (not checked).
-3. **`race` and `educ` are averages of category codes.** An average race code means nothing, and an average education code is at best a rough ordinal index. Use the `race_*` and `educ_*` shares.
-4. **`term_fired`, `term_resigned`, `term_retired` are shares of all job records**, not shares of separations.
-5. **`royalty_iron` relies on the English translation** of substance names ("Iron", "Iron ore") from `clean_cfem.do`. That's the one place left where the translation affects a number. Matching on the Portuguese name, or on `price_group`, would remove that dependence.
-6. **Partial years:** Pix 2020 is two months only. Check whether the latest year of World Bank prices and CFEM is complete.
-7. **The labels stored in the dataset are thin.** Many are just "(mean) x" or "(sum) x", which Stata writes automatically when collapsing, and `cnae67` has none. This file is the reference until the labels are fixed in the code.
-8. **`estab_total_noemployees`** assumes the RAIS "negative filing" flag is coded 1 = yes (not verified against the layout file).

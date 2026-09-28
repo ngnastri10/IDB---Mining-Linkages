@@ -9,20 +9,21 @@
 *   1 = its own SIGMINE point
 *   2 = average of its group members' SIGMINE points (the "Grupamento
 *       Mineiro" group processes big mines pay royalties under)
-*   3 = hand-coded (Data/Crosswalks/hand_coded_mine_locations.csv) -
-*       always wins when filled in, since it's exact
-*   4 = seat of the town where it paid the most royalties (last resort)
+*   3 = seat of the town where it paid the most royalties (last resort)
 *
-* Run once - only needs re-running when you hand-code new mines. Feeds the
-* distance counts, not the final merge directly.
+* Known gap: some big mines (Carajas, 852.145/1976, is the big one) have no
+* SIGMINE point and fall back to the town seat. We tried hand-coding their
+* locations but took it out until we settle on a proper way to do it - see
+* Code/open_decisions.md.
+*
+* Run once - feeds the distance counts, not the final merge directly.
 *
 * Input:
 *   Working/Mines/CFEM/cfem_process_month.dta
 *   Working/Mines/SIGMINE/sigmine_mine_level.dta
 *   Working/Mines/SCM/scm_process.dta
 *   LARGE_DATA_ROOT/SCM/microdados/ProcessoAssociacao.txt
-*   Data/Crosswalks/municipality_latlon.csv
-*   Data/Crosswalks/hand_coded_mine_locations.csv
+*   Data/Crosswalks/municipality_latlon.csv (from pull_crosswalks.py)
 *
 * Output:
 *   Working/Mines/mine_locations.dta
@@ -98,22 +99,7 @@ tempfile groups
 save `groups'
 
 ****************************
-** Source 3: hand-coded **
-****************************
-
-import delimited using "$CROSSWALKS/hand_coded_mine_locations.csv", clear varnames(1) encoding("UTF-8")
-
-* lat/lon come in as text if the column is still empty.
-destring lat lon, replace
-keep if !missing(lat) & !missing(lon)
-keep process_number process_year lat lon
-rename (lat lon) (hand_lat hand_lon)
-
-tempfile hand
-save `hand'
-
-****************************
-** Source 4: town seats **
+** Source 3: town seats **
 ****************************
 
 import delimited using "$CROSSWALKS/municipality_latlon.csv", clear varnames(1)
@@ -194,19 +180,13 @@ replace location_source = 2 if missing(location_source) & !missing(group_lat)
 replace lat = group_lat if location_source == 2
 replace lon = group_lon if location_source == 2
 
-* 3: hand-coded - overrides everything above when filled in
-merge 1:1 process_number process_year using `hand', keep(master match) nogenerate
-replace location_source = 3 if !missing(hand_lat)
-replace lat = hand_lat if location_source == 3
-replace lon = hand_lon if location_source == 3
-
-* 4: seat of the top royalty town
+* 3: seat of the top royalty town
 merge m:1 municipality_code7 using `seats', keep(master match) nogenerate
-replace location_source = 4 if missing(location_source) & !missing(seat_lat)
-replace lat = seat_lat if location_source == 4
-replace lon = seat_lon if location_source == 4
+replace location_source = 3 if missing(location_source) & !missing(seat_lat)
+replace lat = seat_lat if location_source == 3
+replace lon = seat_lon if location_source == 3
 
-label define location_source 1 "SIGMINE point" 2 "Group average" 3 "Hand-coded" 4 "Town seat"
+label define location_source 1 "SIGMINE point" 2 "Group average" 3 "Town seat"
 label values location_source location_source
 
 * How many rights got each source, and what share of royalties that covers.

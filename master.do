@@ -10,8 +10,9 @@
 * each one uses what the stage before it saved.
 *
 * RAIS is the one thing this does NOT build: it's cleaned on the HPC (see
-* the HPC folder, for reference only). Section 5 checks the RAIS files
-* are where they should be and stops with a clear message if not.
+* the HPC folder, for reference only). If the merge stage is on, the
+* first thing this file does is check the two RAIS files are in place -
+* if not, it makes the folders and says exactly where to put them.
 *
 * File Organization:
 *
@@ -68,6 +69,42 @@ do "`repo_folder'/0. Configure File Paths/config.do"
 * A log of the whole run, so you can scroll back through it afterwards.
 capture log close master
 log using "$PROJECT_ROOT/Results/master_log.txt", replace text name(master)
+
+****************************
+** RAIS files in place? **
+****************************
+
+/* Notes:
+
+	The merge stage needs the two cleaned RAIS files from the HPC (shared
+	on Google Drive). Check for them now, before anything else runs, so a
+	missing file stops things in seconds instead of hours in. If they're
+	missing, make the folders and say exactly where each file goes.
+
+*/
+
+if `run_merge' {
+	local rais_workers "$LARGE_DATA_ROOT/RAIS/Working/CNAE67/cleaned_all_years.dta"
+	local rais_estab   "$LARGE_DATA_ROOT/RAIS/Working/Estab/CNAE67/cleaned_all_years.dta"
+
+	capture confirm file "`rais_workers'"
+	local missing_workers = _rc
+	capture confirm file "`rais_estab'"
+	local missing_estab = _rc
+
+	if `missing_workers' | `missing_estab' {
+		* Stata's mkdir makes one folder at a time.
+		foreach f in "RAIS" "RAIS/Working" "RAIS/Working/CNAE67" "RAIS/Working/Estab" "RAIS/Working/Estab/CNAE67" {
+			capture mkdir "$LARGE_DATA_ROOT/`f'"
+		}
+
+		di as error _n "The merge stage needs the two RAIS files. The folders are ready - put them here:"
+		if `missing_workers' di as error "  Workers:        `rais_workers'"
+		if `missing_estab'   di as error "  Establishments: `rais_estab'"
+		di as error "Then run master.do again."
+		exit 601
+	}
+}
 
 ********************************************************************************
 ********************************************************************************
@@ -135,15 +172,6 @@ if `run_merge' {
 	do "$REPO_PATH/3. Merge Data/build_mine_pipeline.do"
 	do "$REPO_PATH/3. Merge Data/build_price_groups.do"
 	do "$CONFIG_DIR/run_python.do" "3. Merge Data/build_mine_distances.py"
-
-	* RAIS comes from the HPC - make sure it's in place before using it.
-	capture confirm file "$LARGE_DATA_ROOT/RAIS/Working/CNAE67/cleaned_all_years.dta"
-	if _rc {
-		di as error "Missing the RAIS file from the HPC:"
-		di as error "    $LARGE_DATA_ROOT/RAIS/Working/CNAE67/cleaned_all_years.dta"
-		di as error "Put it there (see the README for which HPC file goes where), then re-run with run_pull and run_clean set to 0."
-		exit 601
-	}
 
 	do "$CONFIG_DIR/run_python.do" "3. Merge Data/build_price_shock.py"
 	do "$REPO_PATH/3. Merge Data/merge_municipality_cnae67_year.do"

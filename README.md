@@ -32,7 +32,10 @@ The code builds one analysis file: a **municipality × industry (CNAE67) × year
    - **If short on disk space:** set `LARGE_DATA_ROOT` to another drive. Otherwise leave it blank.
    - **If Python won't start:** type `python search` in Stata and paste one of the paths it lists into `PYTHON_EXE` in `config.do`.
 3. **In [`master.do`](master.do):** set `repo_folder` at the top to the same **repo folder**.
-4. **Put the RAIS files in place.** See [RAIS and the HPC](#rais-and-the-hpc).
+4. **Put the RAIS files in place.** RAIS was cleaned on an HPC, so you get the two cleaned files instead of building them:
+   - Download the full `RAIS` folder from Google Drive. It has a workers folder and an establishments folder, one file each.
+   - Run `master.do` with `run_merge` set to 1. It creates the RAIS folders and tells you where each file goes.
+   - Move each file to its spot, one at a time. Keep the name `cleaned_all_years.dta`.
 5. **Run `master.do`.**
 
 `master.do` runs everything in order. Each stage has a switch at the top: **1 = on, 0 = off.** They're all **off (0) by default**, so running it as-is only loads the setup. For a full run, set them all to 1. After your first full run, set `run_pull` back to 0 (see [Data vintage](#data-vintage)).
@@ -66,12 +69,10 @@ You need **Stata 16+** and **Python 3**. `config.do` installs any missing Python
 
 RAIS is too large, so it was cleaned on an HPC. The `HPC/` scripts are there for reference; **you don't need to run them.**
 
-Put cleaned HPC files here:
+The two cleaned RAIS files are shared on Google Drive. With `run_merge` on, `master.do` first checks for them; if they're missing, it creates the folders and tells you exactly where to put them:
 
-| File from the HPC                                                                                           | Where it goes                                                       |
-| ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| `Mining/Working/RAIS/All_Years/CNAE67/cleaned_all_years.dta` (workers)                                    | `LARGE_DATA_ROOT/RAIS/Working/CNAE67/cleaned_all_years.dta`       |
-| `Mining/Working/RAIS/Estab/All_Years/CNAE67/cleaned_all_years.dta` (establishments)                       | `LARGE_DATA_ROOT/RAIS/Working/Estab/CNAE67/cleaned_all_years.dta` |
+- Workers: `LARGE_DATA_ROOT/RAIS/Working/CNAE67/cleaned_all_years.dta`
+- Establishments: `LARGE_DATA_ROOT/RAIS/Working/Estab/CNAE67/cleaned_all_years.dta`
 
 ## Data vintage
 

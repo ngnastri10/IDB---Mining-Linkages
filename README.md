@@ -88,8 +88,8 @@ The public sources are live datasets that their agencies keep updating: ANM (CFE
 | Map boundaries | 2026-09-24 |
 | RAIS (cleaned on the HPC) | 2026-09-22 |
 
-- **To reproduce our results:** use the data snapshot you were sent and set `run_pull` to 0 in `master.do`.
-- **To update to the latest data:** leave `run_pull` on. Expect small changes, especially in recent years.
+- **To reproduce our results:** use the data snapshot you were sent and leave `run_pull` at 0 in `master.do`.
+- **To update to the latest data:** set `run_pull` to 1. Expect small changes, especially in recent years.
 
 ## Ground rules
 

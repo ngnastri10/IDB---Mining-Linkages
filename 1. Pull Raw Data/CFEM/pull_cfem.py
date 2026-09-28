@@ -21,21 +21,21 @@ from pathlib import Path
 # config.py lives at the top of the repo: Code/1. Pull Raw Data/CFEM/
 # -> up two levels -> Code/. Same trick as pull_sigmine.py.
 REPO_ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(REPO_ROOT))
+sys.path.insert(0, str(REPO_ROOT / "0. Configure File Paths"))
 
 try:
     import config
 except ImportError:
     raise SystemExit(
-        "Couldn't find config.py in the Code folder.\n"
-        "Run config.do in Stata first (once per session) - see the README."
+        "Couldn't find config.py in Code/0. Configure File Paths.\n"
+        "Run 0. Configure File Paths/config.do in Stata first (once per session) - see the README."
     )
 
 if not Path(config.PROJECT_ROOT).is_dir():
     raise SystemExit(
         f"PROJECT_ROOT in config.py doesn't point to a real folder:\n"
         f"  {config.PROJECT_ROOT}\n"
-        f"Run config.do again with the right paths."
+        f"Run 0. Configure File Paths/config.do again with the right paths."
     )
 
 DATA_DIR = Path(config.PROJECT_ROOT) / "Data" / "CFEM"

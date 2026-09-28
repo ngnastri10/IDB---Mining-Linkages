@@ -1,6 +1,9 @@
-# Personal config - everyone has their own local paths in here.
-# config_template.py (the version with no real path in it) stays tracked.
+# Personal config - config.do writes this with each person's own paths.
 config.py
+
+# Temporary "it worked" flags from the Python package check and run_python.do.
+python_packages_ok.txt
+python_step_ok.txt
 
 # OS junk
 .DS_Store

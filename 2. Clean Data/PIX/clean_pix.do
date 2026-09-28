@@ -13,7 +13,7 @@
 * Output:
 *   Working/PIX/pix_municipio_monthly.dta
 *
-* BEFORE running this file, run Code/config.do once in your Stata session,
+* BEFORE running this file, run Code/0. Configure File Paths/config.do once in your Stata session,
 * and pull_pix.py to actually get the raw file.
 *
 * File Organization:
@@ -28,7 +28,7 @@ set more off
 
 if "$PROJECT_ROOT" == "" {
     di as error "PROJECT_ROOT isn't set."
-    di as error "Run Code/config.do first (once per Stata session), then run this file again."
+    di as error "Run Code/0. Configure File Paths/config.do first (once per Stata session), then run this file again."
     exit 198
 }
 

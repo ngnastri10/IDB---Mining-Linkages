@@ -27,7 +27,7 @@ Two crosswalks, both straight from IBGE (nothing typed by hand):
    Note: the HPC RAIS cleaning still builds its own copy of this file with
    HPC/build_cnae67_crosswalk.py (same source, same logic).
 
-Same config.py setup as the other pull scripts - run config.do in Stata
+Same config.py setup as the other pull scripts - run 0. Configure File Paths/config.do in Stata
 first.
 
 Needs pandas, plus xlrd to read IBGE's old-style .xls file:
@@ -48,21 +48,21 @@ from pathlib import Path
 import pandas as pd
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(REPO_ROOT))
+sys.path.insert(0, str(REPO_ROOT / "0. Configure File Paths"))
 
 try:
     import config
 except ImportError:
     raise SystemExit(
-        "Couldn't find config.py in the Code folder.\n"
-        "Run config.do in Stata first (once per session) - see the README."
+        "Couldn't find config.py in Code/0. Configure File Paths.\n"
+        "Run 0. Configure File Paths/config.do in Stata first (once per session) - see the README."
     )
 
 if not Path(config.PROJECT_ROOT).is_dir():
     raise SystemExit(
         f"PROJECT_ROOT in config.py doesn't point to a real folder:\n"
         f"  {config.PROJECT_ROOT}\n"
-        f"Run config.do again with the right paths."
+        f"Run 0. Configure File Paths/config.do again with the right paths."
     )
 
 OUT_DIR = Path(config.PROJECT_ROOT) / "Data" / "Crosswalks"

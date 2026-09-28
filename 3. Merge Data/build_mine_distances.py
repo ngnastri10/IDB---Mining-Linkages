@@ -51,7 +51,7 @@ Outputs:
   Working/Mines/municipality_year_mining_priced.dta
   Working/Mines/municipality_year_mining_all.dta
 
-Same config.py setup as the other scripts - run config.do in Stata first.
+Same config.py setup as the other scripts - run 0. Configure File Paths/config.do in Stata first.
 """
 
 import sys
@@ -61,14 +61,14 @@ import numpy as np
 import pandas as pd
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(REPO_ROOT))
+sys.path.insert(0, str(REPO_ROOT / "0. Configure File Paths"))
 
 try:
     import config
 except ImportError:
     raise SystemExit(
-        "Couldn't find config.py in the Code folder.\n"
-        "Run config.do in Stata first (once per session) - see the README."
+        "Couldn't find config.py in Code/0. Configure File Paths.\n"
+        "Run 0. Configure File Paths/config.do in Stata first (once per session) - see the README."
     )
 
 MINES = Path(config.PROJECT_ROOT) / "Working" / "Mines"

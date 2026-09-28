@@ -29,7 +29,7 @@ Inputs:
 Output:
   Working/Mines/municipality_year_price_shock.dta
 
-Same config.py setup as the other scripts - run config.do in Stata first.
+Same config.py setup as the other scripts - run 0. Configure File Paths/config.do in Stata first.
 """
 
 import sys

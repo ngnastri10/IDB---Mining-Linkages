@@ -25,13 +25,13 @@ from pathlib import Path
 # -> up two levels -> Code/. We add that folder to Python's search path so
 # "import config" below can find it no matter where this repo was cloned.
 REPO_ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(REPO_ROOT))
+sys.path.insert(0, str(REPO_ROOT / "0. Configure File Paths"))
 
 try:
     import config
 except ImportError:
     raise SystemExit(
-        "Couldn't find config.py in the Code folder.\n"
+        "Couldn't find config.py in Code/0. Configure File Paths.\n"
         "Copy config_template.py to config.py and fill in your own "
         "PROJECT_ROOT path - instructions are inside that file."
     )

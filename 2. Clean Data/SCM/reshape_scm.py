@@ -35,11 +35,11 @@ if len(sys.argv) == 3:
     MICRO_DIR = Path(sys.argv[1])
     OUT_PATH = Path(sys.argv[2])
 else:
-    sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+    sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "0. Configure File Paths"))
     try:
         import config
     except ImportError:
-        raise SystemExit("Couldn't find config.py in the Code folder - run config.do in Stata first.")
+        raise SystemExit("Couldn't find config.py in Code/0. Configure File Paths - run 0. Configure File Paths/config.do in Stata first.")
     MICRO_DIR = Path(config.LARGE_DATA_ROOT) / "SCM" / "microdados"
     OUT_PATH = Path(config.LARGE_DATA_ROOT) / "SCM" / "scm_process_milestones.csv"
 

@@ -17,7 +17,7 @@ Output:
 GeoPackage (.gpkg) is a standard single-file map format - opens in ArcGIS
 or QGIS too.
 
-Same config.py setup as the other scripts - run config.do in Stata first.
+Same config.py setup as the other scripts - run 0. Configure File Paths/config.do in Stata first.
 """
 
 import sys
@@ -26,14 +26,14 @@ from pathlib import Path
 import geopandas as gpd
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(REPO_ROOT))
+sys.path.insert(0, str(REPO_ROOT / "0. Configure File Paths"))
 
 try:
     import config
 except ImportError:
     raise SystemExit(
-        "Couldn't find config.py in the Code folder.\n"
-        "Run config.do in Stata first (once per session) - see the README."
+        "Couldn't find config.py in Code/0. Configure File Paths.\n"
+        "Run 0. Configure File Paths/config.do in Stata first (once per session) - see the README."
     )
 
 RAW_DIR = Path(config.LARGE_DATA_ROOT) / "Maps"

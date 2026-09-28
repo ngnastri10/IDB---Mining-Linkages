@@ -17,7 +17,7 @@
 * Requires Stata's built-in spatial tools (spshape2dta), which need a
 * reasonably modern Stata (15 or later).
 *
-* BEFORE running this file, run Code/config.do once in your Stata
+* BEFORE running this file, run Code/0. Configure File Paths/config.do once in your Stata
 * session.
 *
 *
@@ -36,7 +36,7 @@ set more off
 
 if "$PROJECT_ROOT" == "" {
     di as error "PROJECT_ROOT isn't set."
-    di as error "Run Code/config.do first (once per Stata session), then run this file again."
+    di as error "Run Code/0. Configure File Paths/config.do first (once per Stata session), then run this file again."
     exit 198
 }
 

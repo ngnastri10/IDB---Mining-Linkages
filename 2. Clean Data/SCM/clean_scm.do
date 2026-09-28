@@ -16,7 +16,7 @@
 * Output:
 *   Working/Mines/SCM/scm_process.dta
 *
-* BEFORE running this file, run Code/config.do once in your Stata session.
+* BEFORE running this file, run Code/0. Configure File Paths/config.do once in your Stata session.
 *
 * File Organization:
 *
@@ -29,7 +29,7 @@ set more off
 
 if "$PROJECT_ROOT" == "" {
     di as error "PROJECT_ROOT isn't set."
-    di as error "Run Code/config.do first (once per Stata session), then run this file again."
+    di as error "Run Code/0. Configure File Paths/config.do first (once per Stata session), then run this file again."
     exit 198
 }
 
@@ -60,7 +60,7 @@ capture confirm file "$SCM_RAW/scm_process_milestones.csv"
 if _rc {
     * "python", not "python3" - on Windows "python3" resolves to the
     * Microsoft Store stub, not the real install.
-    shell python "$REPO_PATH/2. Clean Data/SCM/reshape_scm.py" "$SCM_RAW/microdados" "$SCM_RAW/scm_process_milestones.csv"
+    shell $PYTHON "$REPO_PATH/2. Clean Data/SCM/reshape_scm.py" "$SCM_RAW/microdados" "$SCM_RAW/scm_process_milestones.csv"
 
     capture confirm file "$SCM_RAW/scm_process_milestones.csv"
     if _rc {

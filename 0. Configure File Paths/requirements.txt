@@ -1,0 +1,9 @@
+# Python packages the project needs. config.do checks these and installs
+# any that are missing. To install them by hand instead:
+#   python -m pip install -r requirements.txt
+pandas
+numpy
+geopandas
+matplotlib
+xlrd
+openpyxl

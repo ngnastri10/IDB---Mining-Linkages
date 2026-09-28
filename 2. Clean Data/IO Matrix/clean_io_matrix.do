@@ -35,7 +35,7 @@
 *   Working/IO Matrix/io_matrix_activity_totals_2015.dta
 *   Working/IO Matrix/io_matrix_mining_classification.dta
 *
-* BEFORE running this file, run Code/config.do once in your Stata
+* BEFORE running this file, run Code/0. Configure File Paths/config.do once in your Stata
 * session, and pull_io_matrix.py to actually get the raw files.
 *
 * File Organization:
@@ -52,7 +52,7 @@ set more off
 
 if "$PROJECT_ROOT" == "" {
     di as error "PROJECT_ROOT isn't set."
-    di as error "Run Code/config.do first (once per Stata session), then run this file again."
+    di as error "Run Code/0. Configure File Paths/config.do first (once per Stata session), then run this file again."
     exit 198
 }
 
@@ -107,7 +107,7 @@ if `need_reshape' {
     * "python", not "python3" - confirmed directly on Windows "python3"
     * resolves to the Microsoft Store stub, not the real install, and
     * fails silently rather than raising a visible error.
-    shell python "$REPO_PATH/2. Clean Data/IO Matrix/reshape_io_matrix.py" "$IOMATRIX_RAW/Matriz_de_Insumo_Produto_2015_Nivel_67.xls" "$IOMATRIX_RAW/tab10_2.xls" "$IOMATRIX_RAW/io_matrix_67_2015_long.csv" "$IOMATRIX_RAW/io_matrix_activity_totals_2015.csv"
+    shell $PYTHON "$REPO_PATH/2. Clean Data/IO Matrix/reshape_io_matrix.py" "$IOMATRIX_RAW/Matriz_de_Insumo_Produto_2015_Nivel_67.xls" "$IOMATRIX_RAW/tab10_2.xls" "$IOMATRIX_RAW/io_matrix_67_2015_long.csv" "$IOMATRIX_RAW/io_matrix_activity_totals_2015.csv"
 
     * shell doesn't check whether the script it ran actually succeeded -
     * confirm both files are really there now rather than let a failed

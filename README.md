@@ -18,12 +18,22 @@ The code builds one analysis file: a **municipality × industry (CNAE67) × year
 
 ## Quick start
 
-1. **Make a project folder** (any name, anywhere) and clone this repo into it. The code will create all files in this project folder.
-2. **Tell the code where the repo is.** In [`0. Configure File Paths/config.do`](0.%20Configure%20File%20Paths/config.do), paste the path of **the cloned repo folder itself**, the one with `master.do` in it, not the project folder. For example, if your project folder is `C:\Projects\Mining` and you cloned into it, paste `C:\Projects\Mining\IDB---Mining-Linkages`. The code works out the project folder from there. That's the only required setting. Two optional ones sit right below it:
-   - **If short on disk space:** Set `LARGE_DATA_ROOT` to another drive for the multi-GB files. Otherwise leave it blank and they go in `Large Data` inside your project folder.
-   - **If on a Mac:** Change `PYTHON` to `python3`.
-3. **Put the RAIS files you were sent in place.** See [RAIS and the HPC](#rais-and-the-hpc).
-4. **Open [`master.do`](master.do)**, paste the same repo path at the top, and run it.
+**Two folders, used throughout this README:**
+
+| Name | What it is | Example |
+|---|---|---|
+| **Project folder** | A folder you make to hold everything. The code creates all its files here. | `C:\Projects\Mining` |
+| **Repo folder** | This repo, cloned into the project folder. It's the folder with `master.do` in it. | `C:\Projects\Mining\IDB---Mining-Linkages` |
+
+**Steps:**
+
+1. **Make the project folder** (any name, anywhere) and **clone this repo into it.**
+2. **In [`0. Configure File Paths/config.do`](0.%20Configure%20File%20Paths/config.do):** set `REPO_PATH` to your **repo folder**. The code works out the project folder from it. That's the only required setting. Two optional ones sit right below it:
+   - **If short on disk space:** set `LARGE_DATA_ROOT` to another drive for the multi-GB files. Otherwise leave it blank and they go in `Large Data` inside your project folder.
+   - **If on a Mac:** change `PYTHON` to `python3`.
+3. **In [`master.do`](master.do):** set `repo_folder` at the top to the same **repo folder**. It needs it to find `config.do`.
+4. **Put the RAIS files you were sent in place.** See [RAIS and the HPC](#rais-and-the-hpc).
+5. **Run `master.do`** to build everything. To run just one script instead, run `config.do` first (once per Stata session), then that script.
 
 `master.do` runs everything in order: configure → pull → clean → build and merge → maps. Each stage has an on/off switch at the top. If you're working from the data snapshot you were sent, set `run_pull` to 0 (see [Data vintage](#data-vintage)).
 

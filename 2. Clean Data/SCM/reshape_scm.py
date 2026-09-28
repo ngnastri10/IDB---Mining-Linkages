@@ -43,13 +43,45 @@ else:
     MICRO_DIR = Path(config.LARGE_DATA_ROOT) / "SCM" / "microdados"
     OUT_PATH = Path(config.LARGE_DATA_ROOT) / "SCM" / "scm_process_milestones.csv"
 
-# Event IDs for each milestone - picked from Evento.txt by hand.
+# Event IDs for each milestone, picked by hand from ANM's event list
+# (Evento.txt). The official description of each one is next to it.
+# Checked against Evento.txt on 2026-09-28. Look-alike codes we did NOT
+# pick (denied/withdrawn requests, other ways a concession gets granted or
+# ended) are listed in Code/open_decisions.md.
 MILESTONES = {
-    "date_research_approved": ["317", "291"],
-    "date_concession_requested": ["350", "1781"],
-    "date_concession_granted": ["400", "2132", "2611"],
-    "date_mining_start": ["405", "1198", "1245"],
-    "date_concession_ended": ["554", "499", "2135", "2913", "496", "2134", "498"],
+    # Research report approved. Not used anywhere downstream right now.
+    "date_research_approved": [
+        "317",   # DIR REQ LAV/RELATÓRIO PESQUISA APROVADO ART 30 I CM PUBL
+        "291",   # DIR REQ LAV/RELATÓRIO PESQUISA APROVADO C/REDUÇÃO ÁREA PUBL
+    ],
+    # Company files for a mining concession - a right enters the pipeline here.
+    "date_concession_requested": [
+        "350",   # REQ LAV/REQUERIMENTO LAVRA PROTOC
+        "1781",  # REQ LAV/REQUERIMENTO LAVRA PROTOC FORA DO PRAZO (filed late)
+    ],
+    # Concession granted (ordinance published by the ministry or ANM).
+    "date_concession_granted": [
+        "400",   # CONC LAV/PORTARIA CONCESSÃO DE LAVRA MME PUBL
+        "2132",  # CONC LAV/PORTARIA CONCESSÃO DE LAVRA ANM PUBL
+        "2611",  # CONC LAV/PORTARIA CONCESSÃO DE LAVRA GER/ANM PUBL
+    ],
+    # Company reports it started mining. Counts as "opened" in the pipeline.
+    # 1198 and 1245 belong to other regimes (licensing, artisanal PLG).
+    "date_mining_start": [
+        "405",   # CONC LAV/INÍCIO DE LAVRA COMUNICADO PROTOC
+        "1198",  # LICEN/INÍCIO DE LAVRA COMUNICADO PROTOC
+        "1245",  # PLG/INÍCIO DE LAVRA COMUNICADO PROTOC
+    ],
+    # Concession ended: renounced, lapsed, annulled or revoked.
+    "date_concession_ended": [
+        "554",   # CONC LAV/RENÚNCIA CONCESSÃO LAVRA HOMOLOGADA PUBL
+        "499",   # CONC LAV/PORTARIA CADUCIDADE CONCESSÃO LAVRA MME PUBL
+        "2135",  # CONC LAV/PORTARIA CADUCIDADE CONCESSÃO LAVRA ANM PUBL
+        "2913",  # CONC LAV/PORTARIA CADUCADA CONCESSÃO DE LAVRA MME PUBL
+        "496",   # CONC LAV/PORTARIA NULIDADE CONCESSÃO DE LAVRA MME PUBL
+        "2134",  # CONC LAV/PORTARIA NULIDADE CONCESSÃO DE LAVRA ANM PUBL
+        "498",   # CONC LAV/PORTARIA REVOGAÇÃO CONCESSÃO DE LAVRA MME PUBL
+    ],
 }
 EVENT_TO_MILESTONE = {ev: name for name, evs in MILESTONES.items() for ev in evs}
 

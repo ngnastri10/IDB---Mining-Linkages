@@ -35,7 +35,7 @@ The code builds one analysis file: a **municipality × industry (CNAE67) × year
 4. **Put the RAIS files you were sent in place.** See [RAIS and the HPC](#rais-and-the-hpc).
 5. **Run `master.do`.**
 
-`master.do` runs everything in order: configure → pull → clean → build and merge → maps. Each stage has an on/off switch at the top: **1 = on, 0 = off.** They're all **off (0) by default**, so running it as-is only loads the setup (paths, packages). For a full run, turn them all on (set each to 1). If you're working from the data snapshot you were sent, leave `run_pull` at 0 (see [Data vintage](#data-vintage)).
+`master.do` runs everything in order: configure → pull → clean → build and merge → maps. Each stage has an on/off switch at the top: **1 = on, 0 = off.** They're all **off (0) by default**, so running it as-is only loads the setup (paths, packages). For a full run, turn them all on (set each to 1). The first full run downloads all the public data (`run_pull`); after that you can leave `run_pull` at 0 unless you want fresher data (see [Data vintage](#data-vintage)).
 
 You need **Stata** (built on Stata 16) and **Python 3**. The config step checks your Python packages and installs any that are missing. The list is in [`requirements.txt`](0.%20Configure%20File%20Paths/requirements.txt), and you can also install them by hand: `python -m pip install -r requirements.txt`.
 
@@ -77,7 +77,7 @@ You'll be sent two files. Put them here:
 
 ## Data vintage
 
-The public sources are live datasets that their agencies keep updating: ANM (CFEM, SIGMINE, registry), the World Bank, IBGE and the Central Bank. A fresh pull can therefore give slightly different numbers than ours. Our current files were pulled:
+The public sources are live datasets that their agencies keep updating: ANM (CFEM, SIGMINE, registry), the World Bank, IBGE and the Central Bank. Only the RAIS files are sent to you; everything else you download yourself with `run_pull`. Your pull gets the latest versions, so your numbers can differ slightly from ours, mostly in the most recent years. For reference, our files were pulled:
 
 | Source | Pulled |
 |---|---|
@@ -88,8 +88,7 @@ The public sources are live datasets that their agencies keep updating: ANM (CFE
 | Map boundaries | 2026-09-24 |
 | RAIS (cleaned on the HPC) | 2026-09-22 |
 
-- **To reproduce our results:** use the data snapshot you were sent and leave `run_pull` at 0 in `master.do`.
-- **To update to the latest data:** set `run_pull` to 1. Expect small changes, especially in recent years.
+Once you've pulled, leave `run_pull` at 0 so later runs don't re-download and change the data under you. Set it back to 1 only when you deliberately want fresher data.
 
 ## Ground rules
 

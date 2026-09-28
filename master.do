@@ -44,9 +44,10 @@ local repo_folder "C:\Users\ngnas\OneDrive\Desktop\PhD Documents\Publications\ID
 * setup (paths, packages) - handy before running any single script. Turn
 * on the stages you actually want.
 *
-* Pulling re-downloads everything from the government sites. Those are
-* live datasets, so a fresh pull can give slightly different numbers than
-* the files you were sent - leave it off if you're working from a snapshot.
+* Pulling downloads everything from the government sites. You need it on
+* the first time. Those are live datasets, so each fresh pull can shift
+* the numbers slightly - after your first pull, leave it off unless you
+* want fresher data.
 local run_pull    0
 local run_clean   0
 local run_merge   0

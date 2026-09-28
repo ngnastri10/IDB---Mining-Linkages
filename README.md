@@ -35,7 +35,7 @@ The code builds one analysis file: a **municipality × industry (CNAE67) × year
 4. **Put the RAIS files you were sent in place.** See [RAIS and the HPC](#rais-and-the-hpc).
 5. **Run `master.do`.**
 
-`master.do` runs everything in order: configure → pull → clean → build and merge → maps. Each stage has an on/off switch at the top, and **they all start at 0**, so running it as-is only loads the setup (paths, packages). Turn on the stages you want. If you're working from the data snapshot you were sent, leave `run_pull` at 0 (see [Data vintage](#data-vintage)).
+`master.do` runs everything in order: configure → pull → clean → build and merge → maps. Each stage has an on/off switch at the top. They're set to 0 by default, so running it as-is only loads the setup (paths, packages). Set all switches to 1 for a full run. If you're working from the data snapshot you were sent, leave `run_pull` at 0 (see [Data vintage](#data-vintage)).
 
 You need **Stata** (built on Stata 16) and **Python 3**. The config step checks your Python packages and installs any that are missing. The list is in [`requirements.txt`](0.%20Configure%20File%20Paths/requirements.txt), and you can also install them by hand: `python -m pip install -r requirements.txt`.
 

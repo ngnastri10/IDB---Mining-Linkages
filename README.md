@@ -18,10 +18,7 @@ The code builds one analysis file: a **municipality × industry (CNAE67) × year
 
 ## Quick start
 
-1. **Make a project folder** (any name, anywhere) and clone the repo into it **as a folder called `Code`**. From inside the project folder, run:
-   ```
-   git clone https://github.com/ngnastri10/IDB---Mining-Linkages.git Code
-   ```
+1. **Make a project folder** (any name, anywhere) and clone this repo into it. Then rename the cloned folder to **`Code`**. Git calls it `IDB---Mining-Linkages` by default, and the code expects `Code`.
 2. **Tell the code where your project folder is.** In [`0. Configure File Paths/config.do`](0.%20Configure%20File%20Paths/config.do), paste its path into `PROJECT_ROOT`. That's the only required setting. Two optional ones sit right below it:
    - **Short on disk space?** Set `LARGE_DATA_ROOT` to another drive for the multi-GB files. Otherwise leave it blank and they go in `Large Data` inside your project folder.
    - **On a Mac?** Change `PYTHON` to `python3`.

@@ -2,7 +2,7 @@
 
 Code for the IDB project on mining in Brazil and its links to local economies: when a mine opens near a town, what happens to local employment, wages and industries, especially industries that buy from or sell to mining?
 
-The code builds one analysis file: a **municipality × industry (CNAE67) × year panel, 2007–2025**, with three kinds of variables:
+The code builds one analysis file: a **municipality × industry (CNAE67) × year panel, 2007–2025**, with four kinds of variables:
 
 | | What | Data |
 |---|---|---|

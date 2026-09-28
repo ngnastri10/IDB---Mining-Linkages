@@ -33,9 +33,9 @@ The code builds one analysis file: a **municipality × industry (CNAE67) × year
    - **If on a Mac:** change `PYTHON` to `python3`.
 3. **In [`master.do`](master.do):** set `repo_folder` at the top to the same **repo folder**. It needs it to find `config.do`.
 4. **Put the RAIS files you were sent in place.** See [RAIS and the HPC](#rais-and-the-hpc).
-5. **Run `master.do`** to build everything. To run just one script instead, run `config.do` first (once per Stata session), then that script.
+5. **Run `master.do`.**
 
-`master.do` runs everything in order: configure → pull → clean → build and merge → maps. Each stage has an on/off switch at the top. If you're working from the data snapshot you were sent, set `run_pull` to 0 (see [Data vintage](#data-vintage)).
+`master.do` runs everything in order: configure → pull → clean → build and merge → maps. Each stage has an on/off switch at the top, and **they all start at 0**, so running it as-is only loads the setup (paths, packages). Turn on the stages you want. If you're working from the data snapshot you were sent, leave `run_pull` at 0 (see [Data vintage](#data-vintage)).
 
 You need **Stata** (built on Stata 16) and **Python 3**. The config step checks your Python packages and installs any that are missing. The list is in [`requirements.txt`](0.%20Configure%20File%20Paths/requirements.txt), and you can also install them by hand: `python -m pip install -r requirements.txt`.
 

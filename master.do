@@ -40,13 +40,17 @@ local repo_folder "C:\Users\ngnas\OneDrive\Desktop\PhD Documents\Publications\ID
 
 * 1 = run this stage, 0 = skip it.
 *
+* Everything starts at 0 on purpose: run as-is, this file just loads the
+* setup (paths, packages) - handy before running any single script. Turn
+* on the stages you actually want.
+*
 * Pulling re-downloads everything from the government sites. Those are
 * live datasets, so a fresh pull can give slightly different numbers than
-* the files you were sent - turn it off if you're working from a snapshot.
-local run_pull    1
-local run_clean   1
-local run_merge   1
-local run_results 1
+* the files you were sent - leave it off if you're working from a snapshot.
+local run_pull    0
+local run_clean   0
+local run_merge   0
+local run_results 0
 
 ********************************************************************************
 ********************************************************************************

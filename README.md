@@ -18,7 +18,7 @@ The code builds one analysis file: a **municipality × industry (CNAE67) × year
 
 ## Quick start
 
-1. **Make a project folder** (any name, anywhere) and clone this repo into it. The code creates `Data/`, `Working/` and `Results/` in that project folder, next to the repo.
+1. **Make a project folder** (any name, anywhere) and clone this repo into it. The code will create all files in this project folder.
 2. **Tell the code where the repo is.** In [`0. Configure File Paths/config.do`](0.%20Configure%20File%20Paths/config.do), paste the path of the cloned folder into `REPO_PATH`. That's the only required setting. Two optional ones sit right below it:
    - **Short on disk space?** Set `LARGE_DATA_ROOT` to another drive for the multi-GB files. Otherwise leave it blank and they go in `Large Data` inside your project folder.
    - **On a Mac?** Change `PYTHON` to `python3`.

@@ -1,5 +1,5 @@
 * ==========================================================================
-* Shared config - paste your project folder below and everything else
+* Shared config - paste the path to this repo below and everything else
 * follows from it.
 *
 * Run this once per Stata session before running any other do-file in the
@@ -26,14 +26,15 @@
 ********************************************************************************
 ********************************************************************************
 
-******** 1. PASTE YOUR PROJECT FOLDER HERE (required) ********
-* The folder that holds everything - the repo sits inside it as "Code".
-global PROJECT_ROOT "C:\Users\ngnas\OneDrive\Desktop\PhD Documents\Publications\IDB - Mining"
+******** 1. PASTE THE PATH TO THIS REPO HERE (required) ********
+* The folder you cloned - whatever it's called. The folder it sits in is
+* your project folder: Data, Working and Results get created there.
+global REPO_PATH "C:\Users\ngnas\OneDrive\Desktop\PhD Documents\Publications\IDB - Mining\Code"
 
 ******** 2. BIG FILES SOMEWHERE ELSE? (optional) ********
 * RAIS, the registry microdata, map shapefiles and the final panel are
 * big (several GB). Leave this as "" to keep them in a "Large Data"
-* folder inside your project folder. Only set it if you're short on
+* folder inside your project folder (the one the repo sits in). Only set it if you're short on
 * space and want them on another drive (e.g. "D:\Data").
 global LARGE_DATA_ROOT "D:\Data"
 
@@ -44,20 +45,31 @@ global PYTHON "python"
 
 *** Nothing below here needs changing. ***
 
-* The repo (Code folder) and the big-files default follow from the above.
-global REPO_PATH "$PROJECT_ROOT/Code"
+* Catch the most likely setup mistake early: a path that isn't the repo.
+capture confirm file "$REPO_PATH/master.do"
+if _rc {
+	di as error "Can't find the code at $REPO_PATH"
+	di as error "REPO_PATH should be the folder you cloned - the one with master.do in it."
+	exit 601
+}
+
+* The project folder is the folder the repo sits in. Switch backslashes to
+* forward slashes (Stata and Python both handle those on every system),
+* drop any trailing slash, then cut off the last folder name.
+local repo = subinstr("$REPO_PATH", "\", "/", .)
+if substr("`repo'", -1, 1) == "/" {
+	local repo = substr("`repo'", 1, length("`repo'") - 1)
+}
+global REPO_PATH "`repo'"
+global PROJECT_ROOT = substr("`repo'", 1, strrpos("`repo'", "/") - 1)
+
+* Big files default to a "Large Data" folder inside the project folder.
 if "$LARGE_DATA_ROOT" == "" {
 	global LARGE_DATA_ROOT "$PROJECT_ROOT/Large Data"
 }
 
-* Catch the most likely setup mistake early: the repo not being in a
-* folder called Code inside the project folder.
-capture confirm file "$REPO_PATH/master.do"
-if _rc {
-	di as error "Can't find the code at $REPO_PATH"
-	di as error "The repo needs to sit inside your project folder, in a folder called Code."
-	exit 601
-}
+di as result "Project folder: $PROJECT_ROOT"
+di as result "Big files go in: $LARGE_DATA_ROOT"
 
 * This folder - config.py, requirements.txt and the package checker live here.
 global CONFIG_DIR "$REPO_PATH/0. Configure File Paths"

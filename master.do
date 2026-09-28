@@ -1,9 +1,9 @@
 * ==========================================================================
 * Master file: runs the whole project, start to finish, in order.
 *
-* Before the first run, paste your project folder into
-* "0. Configure File Paths/config.do" (see the README), and paste the
-* same project folder just below. Then run this file.
+* Before the first run, paste the path to this repo (the folder you
+* cloned) into "0. Configure File Paths/config.do" (see the README), and
+* paste the same path just below. Then run this file.
 *
 * The switches in Section 1 turn each stage on or off, so you can re-run
 * just part of the pipeline. Stages have to run in order the first time -
@@ -34,9 +34,9 @@ set more off
 ********************************************************************************
 ********************************************************************************
 
-******** PASTE YOUR PROJECT FOLDER (same as PROJECT_ROOT in config.do) ********
+******** PASTE THE PATH TO THIS REPO (same as REPO_PATH in config.do) ********
 * Needed here too, just so this file can find config.do.
-local project_folder "C:\Users\ngnas\OneDrive\Desktop\PhD Documents\Publications\IDB - Mining"
+local repo_folder "C:\Users\ngnas\OneDrive\Desktop\PhD Documents\Publications\IDB - Mining\Code"
 
 * 1 = run this stage, 0 = skip it.
 *
@@ -58,7 +58,7 @@ local run_results 1
 
 * Sets the path globals, writes config.py for the Python scripts, and
 * checks/installs Stata and Python packages. Always runs.
-do "`project_folder'/Code/0. Configure File Paths/config.do"
+do "`repo_folder'/0. Configure File Paths/config.do"
 
 * A log of the whole run, so you can scroll back through it afterwards.
 capture log close master

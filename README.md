@@ -18,12 +18,12 @@ The code builds one analysis file: a **municipality × industry (CNAE67) × year
 
 ## Quick start
 
-1. **Make a project folder** (any name, anywhere) and clone this repo into it. Then rename the cloned folder to **`Code`**. Git calls it `IDB---Mining-Linkages` by default, and the code expects `Code`.
-2. **Tell the code where your project folder is.** In [`0. Configure File Paths/config.do`](0.%20Configure%20File%20Paths/config.do), paste its path into `PROJECT_ROOT`. That's the only required setting. Two optional ones sit right below it:
+1. **Make a project folder** (any name, anywhere) and clone this repo into it. The code creates `Data/`, `Working/` and `Results/` in that project folder, next to the repo.
+2. **Tell the code where the repo is.** In [`0. Configure File Paths/config.do`](0.%20Configure%20File%20Paths/config.do), paste the path of the cloned folder into `REPO_PATH`. That's the only required setting. Two optional ones sit right below it:
    - **Short on disk space?** Set `LARGE_DATA_ROOT` to another drive for the multi-GB files. Otherwise leave it blank and they go in `Large Data` inside your project folder.
    - **On a Mac?** Change `PYTHON` to `python3`.
 3. **Put the RAIS files you were sent in place.** See [RAIS and the HPC](#rais-and-the-hpc).
-4. **Open [`master.do`](master.do)**, paste the same project folder path at the top, and run it.
+4. **Open [`master.do`](master.do)**, paste the same repo path at the top, and run it.
 
 `master.do` runs everything in order: configure → pull → clean → build and merge → maps. Each stage has an on/off switch at the top. If you're working from the data snapshot you were sent, set `run_pull` to 0 (see [Data vintage](#data-vintage)).
 

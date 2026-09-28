@@ -4,7 +4,7 @@ Running list of choices we made "for now" and gaps we left on purpose. Update th
 
 ## Build progress (merge plan)
 
-- [x] Step 1: pull the ANM registry microdata (`pull_scm.py`) and municipal seat coordinates (`pull_municipality_latlon.py`)
+- [x] Step 1: pull the ANM registry microdata (`pull_scm.py`) and municipal seat coordinates (now `pull_crosswalks.py`, which also pulls the CNAE67 translator into `Data/Crosswalks/`)
 - [x] Step 2: clean the registry into `Working/Mines/SCM/scm_process.dta` (`clean_scm.do`)
 - [x] Step 3: mine locations, `Working/Mines/mine_locations.dta` (`build_mine_locations.do`)
 - [x] Step 4: mine timeline, `Working/Mines/mine_timeline.dta` (`build_mine_timeline.do`). Rules: operating = every year between first and last payment; closed = no payments in 2025-2026; the registry "mining start" date is kept for comparison only.
@@ -29,8 +29,13 @@ Running list of choices we made "for now" and gaps we left on purpose. Update th
 
 ## TOP PRIORITY after the deadline
 
-- **Done (first pass):** step 6 now writes two versions: `municipality_year_mining_priced.dta` (only minerals with a WB price) and `_all.dta` (everything). Mapping: `Data/Crosswalks/substance_to_price_group.csv`. Each right gets its main CFEM substance, or its registry substances if it never paid royalties. Per-right groups are in `Working/Mines/mine_price_group.dta`.
-  - To review: "ARGILA BAUXITICA" (bauxitic clay; one Nova Lima right paid ~R$1B) is currently NOT counted as aluminum. Manganese, niobium, phosphate and coal have no WB price, so they're excluded. Check this is OK.
+- **Done (first pass):** step 6 now writes two versions: `municipality_year_mining_priced.dta` (only minerals with a WB price) and `_all.dta` (everything). Each right gets its main CFEM substance, or its registry substances if it never paid royalties. Per-right groups are in `Working/Mines/mine_price_group.dta`.
+  - **2026-09-28:** the mapping moved from the hand-made `Data/Crosswalks/substance_to_price_group.csv` into code: `3. Merge Data/build_price_groups.do`, one list of exact Portuguese names used for both CFEM and the registry. The old CSV treated the two sources inconsistently, so some rights change group. CFEM names now priced that weren't: ITABIRITO, SILICATOS DE NÍQUEL, GALENA, PLATINA, MINÉRIO DE PLATINA. Registry names now priced that weren't: MINÉRIO DE ALUMÍNIO, ALUMÍNIO, ALUVIÃO ESTANÍFERO. Treatment group counts may move a little - re-check after re-running.
+  - **Reviewed 2026-09-28 (first run of `build_price_groups.do`):** 2,766 of 46,055 royalty-paying rights are priced, covering 87.9% of all royalties (iron alone ~R$54B). Every priced name is a clean match. The newly added CFEM names (ITABIRITO, GALENA, SILICATOS DE NÍQUEL, PLATINA) aren't any right's main substance, so they change nothing on the CFEM side. Gold gravels and ÓXIDO DE FERRO are too small to matter.
+  - **DECIDE: add phosphate, potash and coal?** They have World Bank prices but are currently excluded. Royalties: phosphate (FOSFATO + APATITA) ~R$860M, potash (SILVINITA) ~R$258M, coal (CARVÃO) ~R$258M. For: real, internationally priced minerals; phosphate alone is bigger than zinc + tin + nickel. Against: not metals; coal overlaps CNAE 580, which is left out of the employment share because it mixes coal with quarrying. Adding them means new name lines in `build_price_groups.do`, plus the price series in `clean_wb_prices.do` and `build_price_shock.py`.
+  - No World Bank price, so out regardless: manganese (~R$496M), niobium (PIROCLORO + NIÓBIO, ~R$322M), lithium (~R$126M). Limestone, granite, sand, water, etc. are out by design.
+  - **Check after re-running `build_mine_distances.py`:** the registry side now also prices MINÉRIO DE ALUMÍNIO and ALUMÍNIO (~3,600 more pipeline rights as aluminum), which can grow the control group. Compare against the old counts (25 km: 425 / 916 / 226).
+  - Still open: "ARGILA BAUXITICA" (bauxitic clay; one Nova Lima right paid ~R$1B) is NOT counted as aluminum.
   - The old `municipality_year_mining.dta` (no suffix) is obsolete. Delete it.
 - (Original note) **Restrict which mines count as "mines" in step 6.** Right now every sand pit, clay quarry and gravel site counts. Result: 51% of sedes have a producing site within 10 km by 2025, and the wider bands are saturated. At 25 km there are only 126 controls vs 3,744 always-treated; at 50 km, 12 controls. Filter by minimum royalties and/or metallic/traded substances (`main_substance` in `mine_timeline.dta`, `royalty_total` in `mine_locations.dta`). It's a filter in `build_mine_distances.py`.
 - Current 10 km groups: 1,885 treated, 348 control, 1,982 always treated, 1,355 no potential.
@@ -39,14 +44,20 @@ Running list of choices we made "for now" and gaps we left on purpose. Update th
 
 - **Town-seat fallback is large by count.** 8,788 royalty-paying rights (19%) are placed at a town seat. They're mostly tiny (median R$3.7k in total royalties). For now we keep everything. Later, pick one:
   - a minimum size for counting mines (e.g. R$100k total royalties), or
-  - count only rights with a real point (location_source 1-3).
-- **Hand-code Carajas** (852.145/1976, Parauapebas) in `Data/Crosswalks/hand_coded_mine_locations.csv`. It's about R$24B in royalties, and almost all of the town-seat royalty share. The other 19 rows in that file are optional.
+  - count only rights with a real point (location_source 1-2).
+- **Big mines with no SIGMINE point sit at their town seat, including Carajas** (852.145/1976, Parauapebas). Carajas alone is about R$24B in royalties, almost all of the town-seat royalty share. A quick hand-coding pass (20 biggest rights, `Data/Crosswalks/hand_coded_mine_locations.csv`) was **taken out on 2026-09-28**: it was done in a rush and never filled in. Decide on a proper, documented way to locate these before adding it back.
 - **854 pipeline rights have no location at all.** They're not in SIGMINE and never paid royalties, so there's no town fallback. They're left out of the distance counts for now.
 - **Many mining rights per physical mine.** Counting rights can overcount big complexes. Consider "any mine within X km" or weighting by royalties.
 - **Straight-line distance** ignores rivers and roads. This matters in the Amazon. Note it as a limitation.
 - SIGMINE matches only ~70% of rights that stopped paying (closed mines). The rest fall back to town seats.
 
 ## Openings, closings, pipeline
+
+- **Registry event codes, checked 2026-09-28.** Every code picked in `reshape_scm.py` matches its official description in `Evento.txt` (descriptions are now written next to each code). Look-alike codes we did NOT pick, to decide on. First count how often each happens: re-run `pull_scm.py` to get `ProcessoEvento.txt` back (it's deleted after `reshape_scm.py` runs).
+  1. **DECIDE: track denied/withdrawn concession requests?** Codes 390/2139 (request denied, MME/ANM) and 351/352 (request withdrawn, filed/approved). Right now a denied or withdrawn request looks "requested, still pending" forever and still counts as a pipeline right, so it can be a **control**. Argument for keeping them: a request still signals the area had mineral potential. This is the one that can change the control group.
+  2. **DECIDE: count other ways a concession gets granted?** Codes 507/2142 (concession split off from another), 1785/2618 (concession covering researched areas), 488/2729 (concession absorbing another title). Rights granted this way with no request date never enter the pipeline. Probably few.
+  3. Endings we don't count: 2140 (annulled, legal technicality), 2052 (lapsed under the protected-areas law), 2181 (cancelled by a court). These only affect the in-pipeline counts, not who's a control.
+  4. Reversals are ignored: 696 undoes a lapse, but the code keeps the first "ended" date. Probably rare.
 
 - **Artisanal gold permits (PLG) are excluded.** Only 28% of granted permits ever pay CFEM, and first payments jump in 2018 (rule change), so the timing is unreliable. Revisit with **MapBiomas** satellite mining data (it separates garimpo from industrial mining), which could prove openings physically.
 - **Licensing regime (sand, gravel, clay) has no milestone dates.** We only picked concession-regime events. Add its events if small quarries should count.
@@ -95,6 +106,10 @@ Running list of choices we made "for now" and gaps we left on purpose. Update th
 - **Monthly municipality x CNAE67 x month file** later (hires by industry, for the linkage story).
 - RAIS Estab: merge once pulled. The draft assumes `D:\Data\RAIS\Working\Estab\CNAE67\cleaned_all_years.dta`.
 - Check that every RAIS cnae67 code matches the IO Matrix (watch the public/private education/health split).
+
+## Mechanisms (not built yet)
+
+- **Pre-existing local concentration (HHI)** by municipality, base year, from RAIS. It's a mechanism alongside the IO linkages. Still to decide: concentration across industries (possible with the current muni x CNAE67 data) or across firms within an industry (needs establishment-level data).
 
 ## IO Matrix
 
